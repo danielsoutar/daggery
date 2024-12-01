@@ -1,6 +1,17 @@
 import pytest
 
 from adjustment.graph import DAG, from_string, node_map
+from adjustment.node import Node
+
+
+class AddNode(Node):
+    def transform(self, value: int) -> int:
+        return value + 1
+
+
+class MultiplyNode(Node):
+    def transform(self, value: int) -> int:
+        return value * 2
 
 
 def test_from_valid_string():
@@ -30,3 +41,23 @@ def test_node_map():
     assert isinstance(node_map["baz"], node_map["baz"].__class__)
     assert isinstance(node_map["qux"], node_map["qux"].__class__)
     assert isinstance(node_map["quux"], node_map["quux"].__class__)
+
+
+def test_multiple_operators():
+    # Create nodes
+    node1 = AddNode()
+    node2 = MultiplyNode()
+    node3 = AddNode()
+
+    # Link nodes
+    node1.child = node2
+    node2.child = node3
+
+    # Create DAG
+    dag = DAG(head=node1)
+
+    # Test transformation
+    result = dag.transform(3)
+
+    # (3 + 1) * 2 + 1 = 9
+    assert result == 9
