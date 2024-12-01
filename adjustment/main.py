@@ -2,17 +2,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from .graph import from_string
-
-
-class AdjustmentRequest(BaseModel):
-    name: str
-    value: int
-    operations: str
-
-
-class AdjustmentResponse(BaseModel):
-    message: str
-
+from .request import AdjustmentRequest
+from .response import AdjustmentResponse
 
 app = FastAPI()
 
