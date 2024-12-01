@@ -2,7 +2,7 @@ from typing import Dict
 
 from pydantic import BaseModel
 
-from .models import Bar, Baz, Foo, Node, Quux, Qux
+from .node import Bar, Baz, Foo, Node, Quux, Qux
 
 
 class DAG(BaseModel):
