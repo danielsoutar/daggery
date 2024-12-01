@@ -6,6 +6,8 @@ from pydantic import BaseModel, field_validator
 class Node(BaseModel):
     child: Optional["Node"] = None
 
+    # This validator ensures that a Node cannot accidentally produce a cycle
+    # in its containing graph.
     @field_validator("child")
     def validate_child(cls, v):
         if v is not None and v.child is not None:

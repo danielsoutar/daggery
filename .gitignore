@@ -5,3 +5,9 @@
 # Ignore environment files
 .env
 .venv/
+
+# Ignore poetry.lock file
+poetry.lock
+
+# Ignore Visual Studio Code settings directory
+.vscode/
