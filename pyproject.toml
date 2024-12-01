@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "adjustment-example"
+name = "adjustment"
 version = "0.1.0"
 description = ""
 authors = ["Daniel Soutar <danielsoutar144@gmail.com>"]

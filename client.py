@@ -1,5 +1,7 @@
 import requests
 
+from adjustment.main import app
+
 url = "http://127.0.0.1:8000/foo"
 
 # Define the Foo object to send

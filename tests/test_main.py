@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.main import AdjustmentRequest, AdjustmentResponse, app
+from adjustment.main import AdjustmentRequest, AdjustmentResponse, app
 
 # Create a TestClient instance
 client = TestClient(app)

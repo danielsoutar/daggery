@@ -1,6 +1,6 @@
 import pytest
 
-from app.graph import DAG, from_string, node_map
+from adjustment.graph import DAG, from_string, node_map
 
 
 def test_from_valid_string():
