@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from .graph import from_string
+
 
 class AdjustmentRequest(BaseModel):
     name: str
@@ -31,9 +33,14 @@ async def process_adjustment_request(adjustment_request: AdjustmentRequest):
     ### Response
     - **message**: Confirmation message including the result of the operations.
     """
+    # Process the operations from the request
+    dag = from_string(adjustment_request.operations)
+    result = dag.transform(adjustment_request.value)
+
     return AdjustmentResponse(
         message=(
             f"Received AdjustmentRequest with name: {adjustment_request.name} "
-            f"and value: {adjustment_request.value}"
+            f"and value: {adjustment_request.value}. "
+            f"Result after transformation: {result}"
         )
     )

@@ -12,22 +12,30 @@ class Node(BaseModel):
             raise ValueError("Child node cannot have its own child set.")
         return v
 
+    def transform(self, value: int) -> int:
+        return value  # Default pass-through transformation
+
 
 class Foo(Node):
-    transform: Callable[[int], int] = lambda x: x * x
+    def transform(self, value: int) -> int:
+        return value * value
 
 
 class Bar(Node):
-    transform: Callable[[int], int] = lambda x: x + 10
+    def transform(self, value: int) -> int:
+        return value + 10
 
 
 class Baz(Node):
-    transform: Callable[[int], int] = lambda x: x - 5
+    def transform(self, value: int) -> int:
+        return value - 5
 
 
 class Qux(Node):
-    transform: Callable[[int], int] = lambda x: x * 2
+    def transform(self, value: int) -> int:
+        return value * 2
 
 
 class Quux(Node):
-    transform: Callable[[int], int] = lambda x: x // 2
+    def transform(self, value: int) -> int:
+        return value // 2

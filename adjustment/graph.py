@@ -8,6 +8,9 @@ from .models import Bar, Baz, Foo, Node, Quux, Qux
 class DAG(BaseModel):
     head: Node
 
+    def transform(self, value: int) -> int:
+        return self.head.transform(value)
+
 
 node_map: Dict[str, Node] = {
     "foo": Foo(),
