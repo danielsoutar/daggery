@@ -11,9 +11,9 @@ app = FastAPI()
 @app.post("/adjustment", response_model=AdjustmentResponse)
 async def process_adjustment_request(adjustment_request: AdjustmentRequest):
     """
-    Process an AdjustmentRequest
+    Process an AdjustmentRequest.
 
-    This endpoint receives a `AdjustmentRequest`, performs the specified series,
+    This endpoint receives a `AdjustmentRequest`, performs the specified series
     of operations, and returns a confirmation message with the result.
 
     ### Request Body
@@ -22,7 +22,7 @@ async def process_adjustment_request(adjustment_request: AdjustmentRequest):
     - operations: A string representing the series of operations to perform.
 
     ### Response
-    - **message**: Confirmation message including the result of the operations.
+    - message: Confirmation message including the result of the operations.
     """
     # Process the operations from the request
     dag = from_string(adjustment_request.operations)

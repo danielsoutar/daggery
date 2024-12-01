@@ -1,15 +1,52 @@
+import logging
 from typing import Dict
 
+import colorlog
 from pydantic import BaseModel
 
 from .node import Bar, Baz, Foo, Node, Quux, Qux
+
+# Create a logger instance
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Create a console handler and set the level to INFO
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
+# Create a color formatter and set it for the handler
+formatter = colorlog.ColoredFormatter(
+    fmt="%(log_color)s%(levelname)s%(reset)s: %(asctime)s [%(name)s]  %(message)s",
+    datefmt=None,
+    reset=True,
+    log_colors={
+        "DEBUG": "cyan",
+        "INFO": "green",
+        "WARNING": "yellow",
+        "ERROR": "red",
+        "CRITICAL": "red,bg_white",
+    },
+)
+console_handler.setFormatter(formatter)
+
+# Add the handler to the logger
+logger.addHandler(console_handler)
 
 
 class DAG(BaseModel):
     head: Node
 
     def transform(self, value: int) -> int:
-        return self.head.transform(value)
+        current_node: Node | None = self.head
+        while current_node is not None:
+            # Log the node name and intermediate result.
+            logger.info(
+                f"Node: {current_node.__class__.__name__}, "
+                f"Intermediate Result: {value}"
+            )
+            value = current_node.transform(value)
+            current_node = current_node.child
+        return value
 
 
 node_map: Dict[str, Node] = {
