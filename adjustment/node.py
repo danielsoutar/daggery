@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Optional
 
 from pydantic import BaseModel, field_validator
 

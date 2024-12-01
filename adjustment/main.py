@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
 
 from .graph import from_string
 from .request import AdjustmentRequest
