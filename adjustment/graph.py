@@ -57,12 +57,12 @@ class DAG(BaseModel):
         return value
 
 
-node_map: Dict[str, Node] = {
-    "foo": Foo(),
-    "bar": Bar(),
-    "baz": Baz(),
-    "qux": Qux(),
-    "quux": Quux(),
+node_map: Dict[str, type[Node]] = {
+    "foo": Foo,
+    "bar": Bar,
+    "baz": Baz,
+    "qux": Qux,
+    "quux": Quux,
 }
 
 
@@ -72,13 +72,13 @@ def from_string(dag_string: str) -> DAG:
     # Validate node names
     if any(node_name not in node_map.keys() for node_name in node_names):
         raise ValueError(f"Invalid node name encountered in: {dag_string}")
-    # Create a DAG object
-    head_node = node_map[node_names[0]]
+    # Create a DAG object - creating a new instance on each call.
+    head_node = node_map[node_names[0]]()
     current = head_node
     # Because Nodes cannot point to Nodes with their own children set, we must
     # set nodes from head to tail.
     for node_name in node_names[1:]:
-        node = node_map[node_name]
+        node = node_map[node_name]()
         current.child = node
         current = node
     return DAG(head=head_node)

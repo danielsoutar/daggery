@@ -1,7 +1,7 @@
 import pytest
 
 from adjustment.graph import DAG, from_string, node_map
-from adjustment.node import Node
+from adjustment.node import Bar, Baz, Foo, Node, Quux, Qux
 
 
 class AddNode(Node):
@@ -18,9 +18,18 @@ def test_from_valid_string():
     dag_string = "foo >> bar >> baz"
     dag = from_string(dag_string)
     assert isinstance(dag, DAG)
-    assert dag.head == node_map["foo"]
-    assert dag.head.child == node_map["bar"]
-    assert dag.head.child.child == node_map["baz"]
+
+    # Create expected instances
+    expected_head = node_map["foo"]()
+    expected_second = node_map["bar"]()
+    expected_third = node_map["baz"]()
+    expected_head.child = expected_second
+    expected_second.child = expected_third
+
+    # Compare actual DAG with expected instances
+    assert dag.head == expected_head
+    assert dag.head.child == expected_second
+    assert dag.head.child.child == expected_third
     assert dag.head.child.child.child is None
 
 
@@ -36,11 +45,11 @@ def test_node_map():
     assert "baz" in node_map
     assert "qux" in node_map
     assert "quux" in node_map
-    assert isinstance(node_map["foo"], node_map["foo"].__class__)
-    assert isinstance(node_map["bar"], node_map["bar"].__class__)
-    assert isinstance(node_map["baz"], node_map["baz"].__class__)
-    assert isinstance(node_map["qux"], node_map["qux"].__class__)
-    assert isinstance(node_map["quux"], node_map["quux"].__class__)
+    assert isinstance(node_map["foo"], Foo.__class__)
+    assert isinstance(node_map["bar"], Bar.__class__)
+    assert isinstance(node_map["baz"], Baz.__class__)
+    assert isinstance(node_map["qux"], Qux.__class__)
+    assert isinstance(node_map["quux"], Quux.__class__)
 
 
 def test_multiple_operators():

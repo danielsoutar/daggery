@@ -23,7 +23,6 @@ async def process_adjustment_request(adjustment_request: AdjustmentRequest):
     ### Response
     - message: Confirmation message including the result of the operations.
     """
-    # Process the operations from the request
     dag = from_string(adjustment_request.operations)
     result = dag.transform(adjustment_request.value)
 
