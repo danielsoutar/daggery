@@ -8,7 +8,7 @@ class Node(BaseModel, ABC):
     child: Optional["Node"] = None
 
     @abstractmethod
-    def transform(self, value: int) -> int:
+    def transform(self, value):
         pass  # Abstract method
 
 

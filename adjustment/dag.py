@@ -73,7 +73,7 @@ def from_string(dag_string: str) -> DAG:
     # Validate node names
     if any(node_name not in node_map.keys() for node_name in node_names):
         raise ValueError(f"Invalid node name encountered in: {dag_string}")
-    # Assert there is at least one node.
+    # Check there is at least one node.
     if len(node_names) == 0:
         raise ValueError("DAG string must name at least one node")
 

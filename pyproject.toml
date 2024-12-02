@@ -28,6 +28,7 @@ profile = "black"
 
 [tool.mypy]
 plugins = []
+check_untyped_defs = true
 
 [build-system]
 requires = ["poetry-core"]
