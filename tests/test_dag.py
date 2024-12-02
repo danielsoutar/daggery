@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from pydantic import ConfigDict
 
@@ -71,3 +73,22 @@ def test_node_map():
 def test_cannot_create_abstract_node():
     with pytest.raises(TypeError, match="Can't instantiate abstract class Node"):
         Node()  # type: ignore
+
+
+def test_constructor_blocks_arbitrary_node_initialization():
+    # Create a basic Node instance
+    class TestNode(Node):
+        def transform(self, value):
+            return value
+
+    test_node = TestNode()
+
+    # Manually set its child to itself, creating a cycle
+    test_node.child = test_node
+
+    # Attempt to create a DAG
+    with pytest.raises(
+        TypeError,
+        match=re.escape("DAG.__init__() got an unexpected keyword argument 'head'"),
+    ):
+        DAG(head=test_node)  # type: ignore
