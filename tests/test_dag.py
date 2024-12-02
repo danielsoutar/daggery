@@ -25,7 +25,7 @@ def test_single_node():
     assert isinstance(dag, DAG)
 
     # Create expected instance
-    expected_head = node_map["foo"](child=None)
+    expected_head = Foo(child=None)
 
     # Compare actual DAG with expected instance
     assert dag.head == expected_head
@@ -38,9 +38,9 @@ def test_multiple_nodes():
     assert isinstance(dag, DAG)
 
     # Create expected instances using back-to-front construction
-    expected_third = node_map["baz"]()
-    expected_second = node_map["bar"](child=expected_third)
-    expected_head = node_map["foo"](child=expected_second)
+    expected_third = Baz(child=None)
+    expected_second = Bar(child=expected_third)
+    expected_head = Foo(child=expected_second)
 
     # Compare actual DAG with expected instances
     assert dag.head == expected_head

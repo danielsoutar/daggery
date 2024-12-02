@@ -41,6 +41,15 @@ def logger_factory() -> logging.Logger:
 logger = logger_factory()
 
 
+node_map: Dict[str, type[Node]] = {
+    "foo": Foo,
+    "bar": Bar,
+    "baz": Baz,
+    "qux": Qux,
+    "quux": Quux,
+}
+
+
 class DAG(BaseModel):
     head: Node
 
@@ -75,12 +84,3 @@ class DAG(BaseModel):
             value = current_node.transform(value)
             current_node = current_node.child
         return value
-
-
-node_map: Dict[str, type[Node]] = {
-    "foo": Foo,
-    "bar": Bar,
-    "baz": Baz,
-    "qux": Qux,
-    "quux": Quux,
-}
