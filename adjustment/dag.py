@@ -66,19 +66,21 @@ node_map: Dict[str, type[Node]] = {
 }
 
 
-# Factory function to create a map from names to node instances
 def from_string(dag_string: str) -> DAG:
+    if dag_string == "":
+        raise ValueError("DAG string cannot be empty")
     node_names = list(map(str.strip, dag_string.split(">>")))
     # Validate node names
     if any(node_name not in node_map.keys() for node_name in node_names):
         raise ValueError(f"Invalid node name encountered in: {dag_string}")
-    # Create a DAG object - creating a new instance on each call.
-    head_node = node_map[node_names[0]]()
-    current = head_node
-    # Because Nodes cannot point to Nodes with their own children set, we must
-    # set nodes from head to tail.
-    for node_name in node_names[1:]:
-        node = node_map[node_name]()
-        current.child = node
+    # Assert there is at least one node.
+    if len(node_names) == 0:
+        raise ValueError("DAG string must name at least one node")
+
+    # Create a DAG object using back-to-front construction
+    current = node_map[node_names[-1]](child=None)
+    for node_name in reversed(node_names[:-1]):
+        node = node_map[node_name](child=current)
         current = node
-    return DAG(head=head_node)
+
+    return DAG(head=current)

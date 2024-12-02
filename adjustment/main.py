@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
-from .graph import from_string
+from adjustment.dag import from_string
+
 from .request import AdjustmentRequest
 from .response import AdjustmentResponse
 

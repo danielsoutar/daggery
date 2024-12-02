@@ -1,43 +1,47 @@
+from abc import ABC, abstractmethod
 from typing import Optional
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict
 
 
-class Node(BaseModel):
+class Node(BaseModel, ABC):
     child: Optional["Node"] = None
 
+    @abstractmethod
     def transform(self, value: int) -> int:
-        return value  # Default pass-through transformation
-
-    # This validator ensures that a Node cannot accidentally produce a cycle
-    # in its containing graph.
-    @field_validator("child")
-    def validate_child(cls, v):
-        if v is not None and v.child is not None:
-            raise ValueError("Child node cannot have its own child set.")
-        return v
+        pass  # Abstract method
 
 
 class Foo(Node):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     def transform(self, value: int) -> int:
         return value * value
 
 
 class Bar(Node):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     def transform(self, value: int) -> int:
         return value + 10
 
 
 class Baz(Node):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     def transform(self, value: int) -> int:
         return value - 5
 
 
 class Qux(Node):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     def transform(self, value: int) -> int:
         return value * 2
 
 
 class Quux(Node):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     def transform(self, value: int) -> int:
         return value // 2
