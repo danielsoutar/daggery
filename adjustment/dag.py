@@ -44,6 +44,26 @@ logger = logger_factory()
 class DAG(BaseModel):
     head: Node
 
+    def __init__(self, dag_string: str):
+        if dag_string == "":
+            raise ValueError("DAG string cannot be empty")
+
+        node_names = list(map(str.strip, dag_string.split(">>")))
+        # Validate node names
+        if any(node_name not in node_map.keys() for node_name in node_names):
+            raise ValueError(f"Invalid node name encountered in: {dag_string}")
+        # Check there is at least one node.
+        if len(node_names) == 0:
+            raise ValueError("DAG string must name at least one node")
+
+        # Create a DAG object using back-to-front construction
+        current = node_map[node_names[-1]](child=None)
+        for node_name in reversed(node_names[:-1]):
+            node = node_map[node_name](child=current)
+            current = node
+
+        super().__init__(head=current)
+
     def transform(self, value: int) -> int:
         current_node: Node | None = self.head
         while current_node is not None:
@@ -64,23 +84,3 @@ node_map: Dict[str, type[Node]] = {
     "qux": Qux,
     "quux": Quux,
 }
-
-
-def from_string(dag_string: str) -> DAG:
-    if dag_string == "":
-        raise ValueError("DAG string cannot be empty")
-    node_names = list(map(str.strip, dag_string.split(">>")))
-    # Validate node names
-    if any(node_name not in node_map.keys() for node_name in node_names):
-        raise ValueError(f"Invalid node name encountered in: {dag_string}")
-    # Check there is at least one node.
-    if len(node_names) == 0:
-        raise ValueError("DAG string must name at least one node")
-
-    # Create a DAG object using back-to-front construction
-    current = node_map[node_names[-1]](child=None)
-    for node_name in reversed(node_names[:-1]):
-        node = node_map[node_name](child=current)
-        current = node
-
-    return DAG(head=current)

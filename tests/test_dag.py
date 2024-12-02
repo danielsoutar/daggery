@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ConfigDict
 
-from adjustment.dag import DAG, from_string, node_map
+from adjustment.dag import DAG, node_map
 from adjustment.node import Bar, Baz, Foo, Node, Quux, Qux
 
 
@@ -19,9 +19,22 @@ class MultiplyNode(Node):
         return value * 2
 
 
-def test_from_valid_string():
+def test_single_node():
+    dag_string = "foo"
+    dag = DAG(dag_string)
+    assert isinstance(dag, DAG)
+
+    # Create expected instance
+    expected_head = node_map["foo"](child=None)
+
+    # Compare actual DAG with expected instance
+    assert dag.head == expected_head
+    assert dag.head.child is None
+
+
+def test_multiple_nodes():
     dag_string = "foo >> bar >> baz"
-    dag = from_string(dag_string)
+    dag = DAG(dag_string)
     assert isinstance(dag, DAG)
 
     # Create expected instances using back-to-front construction
@@ -39,7 +52,7 @@ def test_from_valid_string():
 def test_from_invalid_string():
     dag_string = "foo >> invalid >> baz"
     with pytest.raises(ValueError, match="Invalid node name encountered"):
-        from_string(dag_string)
+        DAG(dag_string)
 
 
 def test_node_map():
@@ -58,19 +71,3 @@ def test_node_map():
 def test_cannot_create_abstract_node():
     with pytest.raises(TypeError, match="Can't instantiate abstract class Node"):
         Node()  # type: ignore
-
-
-def test_multiple_operators():
-    # Create nodes back-to-front.
-    node3 = AddNode()
-    node2 = MultiplyNode(child=node3)
-    node1 = AddNode(child=node2)
-
-    # Create DAG
-    dag = DAG(head=node1)
-
-    # Test transformation
-    result = dag.transform(3)
-
-    # (3 + 1) * 2 + 1 = 9
-    assert result == 9

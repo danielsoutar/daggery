@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from adjustment.dag import from_string
+from adjustment.dag import DAG
 
 from .request import AdjustmentRequest
 from .response import AdjustmentResponse
@@ -24,7 +24,7 @@ async def process_adjustment_request(adjustment_request: AdjustmentRequest):
     ### Response
     - message: Confirmation message including the result of the operations.
     """
-    dag = from_string(adjustment_request.operations)
+    dag = DAG(adjustment_request.operations)
     result = dag.transform(adjustment_request.value)
 
     return AdjustmentResponse(
