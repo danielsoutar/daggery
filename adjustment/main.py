@@ -2,8 +2,12 @@ from fastapi import FastAPI
 
 from adjustment.dag import DAG
 
+from .dag import InvalidGraph
 from .request import AdjustmentRequest
 from .response import AdjustmentResponse
+from .utils import logger_factory
+
+logger = logger_factory(__name__)
 
 app = FastAPI()
 
@@ -24,9 +28,14 @@ async def process_adjustment_request(adjustment_request: AdjustmentRequest):
     ### Response
     - message: Confirmation message including the result of the operations.
     """
-    dag = DAG(adjustment_request.operations)
-    result = dag.transform(adjustment_request.value)
+    dag = DAG.from_input(adjustment_request.operations)
 
+    if isinstance(dag, InvalidGraph):
+        logger.error("Failed to create DAG")
+        return AdjustmentResponse(message=f"Failed to create DAG: {dag.message}")
+
+    logger.info("DAG successfully created")
+    result = dag.transform(adjustment_request.value)
     return AdjustmentResponse(
         message=(
             f"Received AdjustmentRequest with name: {adjustment_request.name} "

@@ -1,44 +1,13 @@
-import logging
-from typing import Dict
+from collections import deque
+from typing import Dict, Union
 
-import colorlog
 from pydantic import BaseModel
 
 from .node import Bar, Baz, Foo, Node, Quux, Qux
+from .parse import EmptyDAG, UnvalidatedDAG, UnvalidatedNode, parse_linear_list_string
+from .utils import logger_factory
 
-
-def logger_factory() -> logging.Logger:
-    # Create a logger instance
-    logger = logging.getLogger(__name__)
-
-    logger.setLevel(logging.INFO)
-
-    # Create a console handler and set the level to INFO
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-
-    # Create a color formatter and set it for the handler
-    formatter = colorlog.ColoredFormatter(
-        fmt="%(log_color)s%(levelname)s%(reset)s: %(asctime)s [%(name)s]  %(message)s",
-        datefmt=None,
-        reset=True,
-        log_colors={
-            "DEBUG": "cyan",
-            "INFO": "green",
-            "WARNING": "yellow",
-            "ERROR": "red",
-            "CRITICAL": "red,bg_white",
-        },
-    )
-    console_handler.setFormatter(formatter)
-
-    # Add the handler to the logger
-    logger.addHandler(console_handler)
-
-    return logger
-
-
-logger = logger_factory()
+logger = logger_factory(__name__)
 
 
 node_map: Dict[str, type[Node]] = {
@@ -50,37 +19,109 @@ node_map: Dict[str, type[Node]] = {
 }
 
 
+class InvalidGraph(BaseModel):
+    message: str
+
+
 class DAG(BaseModel):
     head: Node
 
-    def __init__(self, dag_string: str):
-        if dag_string == "":
-            raise ValueError("DAG string cannot be empty")
+    def __init__(self, head: Node):
+        # Set the head of the DAG
+        super().__init__(head=head)
 
-        node_names = list(map(str.strip, dag_string.split(">>")))
-        # Validate node names
-        if any(node_name not in node_map.keys() for node_name in node_names):
-            raise ValueError(f"Invalid node name encountered in: {dag_string}")
-        # Check there is at least one node.
-        if len(node_names) == 0:
-            raise ValueError("DAG string must name at least one node")
+    @classmethod
+    def create(cls, unvalidated_dag: UnvalidatedDAG) -> Union["DAG", InvalidGraph]:
+        node_names = [node.name for node in unvalidated_dag.nodes]
+        if len(node_names) != len(set(node_names)):
+            return InvalidGraph(message="DAG must contain unique node names")
 
-        # Create a DAG object using back-to-front construction
-        current = node_map[node_names[-1]](child=None)
-        for node_name in reversed(node_names[:-1]):
-            node = node_map[node_name](child=current)
-            current = node
+        node_rules = [node.rule for node in unvalidated_dag.nodes]
+        for rule in node_rules:
+            if rule not in node_map.keys():
+                return InvalidGraph(
+                    message=f"Invalid rule found in unvalidated DAG: {rule}"
+                )
 
-        super().__init__(head=current)
+        graph_nodes: dict[str, Node] = {}
+        child_counts: dict[str, int] = {name: 0 for name in node_names}
+        parent_counts: dict[str, int] = {name: 0 for name in node_names}
+        head: Node = Foo(name="dummy", children=[])
+
+        # Creating immutable nodes back-to-front guarantees an immutable DAG.
+        for unvalidated_node in reversed(unvalidated_dag.nodes):
+            name = unvalidated_node.name
+            child_nodes: list[Node] = []
+
+            for child_name in unvalidated_node.children:
+                child_nodes.append(graph_nodes[child_name])
+                parent_counts[child_name] += 1
+
+            child_counts[name] = len(unvalidated_node.children)
+
+            node_class = node_map[unvalidated_node.rule]
+            node = node_class(name=name, children=child_nodes)
+
+            graph_nodes[name] = node
+            head = node
+
+        # Confirm there is exactly one head node. The head has no parent.
+        heads = list(filter(lambda count: count == 0, parent_counts.values()))
+        if len(heads) != 1:
+            return InvalidGraph(message=f"DAG must have exactly one head node: {heads}")
+
+        # Confirm there is exactly one tail node. The tail has no children.
+        tails = list(filter(lambda count: count == 0, child_counts.values()))
+        if len(tails) != 1:
+            return InvalidGraph(message=f"DAG must have exactly one tail node: {tails}")
+
+        return cls(head=head)
+
+    @classmethod
+    def from_input(cls, input_data: str | list[dict]) -> Union["DAG", InvalidGraph]:
+        if isinstance(input_data, str):
+            # Input is a linear string representation
+            linear_dag = parse_linear_list_string(input_data)
+            if isinstance(linear_dag, EmptyDAG):
+                return InvalidGraph(message=linear_dag.message)
+            return cls.create(unvalidated_dag=linear_dag)
+        is_list = isinstance(input_data, list)
+        if not (is_list and all(isinstance(node, dict) for node in input_data)):
+            return InvalidGraph(
+                message=f"Input must be a list of dictionaries: {input_data}"
+            )
+
+        nodes, seen_names = [], set()
+        for node_dict in input_data:
+            node = UnvalidatedNode(**node_dict)
+            seen_names.add(node.name)
+            # Check if any children reference a previously seen name
+            if any(child in seen_names for child in node.children):
+                return InvalidGraph(
+                    message=f"Input is not topologically sorted: {node} references {seen_names}"
+                )
+            nodes.append(node)
+        unvalidated_dag = UnvalidatedDAG(nodes=nodes)
+
+        return cls.create(unvalidated_dag)
 
     def transform(self, value: int) -> int:
-        current_node: Node | None = self.head
-        while current_node is not None:
+        node_queue = deque([self.head])
+        val_queue = deque([value])
+
+        while node_queue:
+            current_node = node_queue.popleft()
+            node_input_value = val_queue.popleft()
+
             # Log the node name and intermediate result.
             logger.info(
                 f"Node: {current_node.__class__.__name__}, "
-                f"Intermediate Result: {value}"
+                f"Intermediate Result (input to this Node): {node_input_value}"
             )
-            value = current_node.transform(value)
-            current_node = current_node.child
-        return value
+
+            node_output_value = current_node.transform(node_input_value)
+            node_queue.extend(current_node.children)
+            val_queue.extend([node_output_value] * len(current_node.children))
+
+        # The last node_output_value is the final transformed result
+        return node_output_value

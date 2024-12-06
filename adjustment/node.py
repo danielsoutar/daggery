@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import List
 
 from pydantic import BaseModel, ConfigDict
 
 
 class Node(BaseModel, ABC):
-    child: Optional["Node"] = None
+    name: str
+    children: List["Node"] = []
 
     @abstractmethod
     def transform(self, value):
