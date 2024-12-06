@@ -85,6 +85,7 @@ class DAG(BaseModel):
             if isinstance(linear_dag, EmptyDAG):
                 return InvalidGraph(message=linear_dag.message)
             return cls.create(unvalidated_dag=linear_dag)
+
         is_list = isinstance(input_data, list)
         if not (is_list and all(isinstance(node, dict) for node in input_data)):
             return InvalidGraph(

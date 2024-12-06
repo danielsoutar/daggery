@@ -48,6 +48,22 @@ def test_multiple_nodes():
     assert dag.head.children[0].children[0].children == []
 
 
+def test_multiple_nodes_of_same_type():
+    dag = DAG.from_input("foo >> foo >> foo")
+    assert isinstance(dag, DAG)
+
+    # Create expected instances using back-to-front construction
+    expected_third = Foo(name="foo2", children=[])
+    expected_second = Foo(name="foo1", children=[expected_third])
+    expected_head = Foo(name="foo0", children=[expected_second])
+
+    # Compare actual DAG with expected instances
+    assert dag.head == expected_head
+    assert dag.head.children == [expected_second]
+    assert dag.head.children[0].children == [expected_third]
+    assert dag.head.children[0].children[0].children == []
+
+
 def test_from_invalid_string():
     result = DAG.from_input("foo >> invalid >> baz")
     assert isinstance(result, InvalidGraph)
