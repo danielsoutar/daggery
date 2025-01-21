@@ -8,8 +8,10 @@ client = TestClient(app)
 # TODO: Consider installing pytest-xdist for parallel test execution
 
 
-def test_adjustment():
-    adj_input = AdjustmentRequest(name="example", value=42, operations="foo")
+def test_adjustment_single_operation():
+    adj_input = AdjustmentRequest(
+        name="example", value=42, operations="foo", argument_mappings=[]
+    )
     response = client.post("/adjustment", json=adj_input.model_dump())
     assert response.status_code == 200
     adj_output = AdjustmentResponse(**response.json())
@@ -20,9 +22,12 @@ def test_adjustment():
     )
 
 
-def test_multi_node_graph():
+def test_adjustment_multiple_operations():
     adj_input = AdjustmentRequest(
-        name="multi-node", value=10, operations="foo >> bar >> baz"
+        name="multi-node",
+        value=10,
+        operations="foo >> bar >> baz",
+        argument_mappings=[],
     )
     response = client.post("/adjustment", json=adj_input.model_dump())
     assert response.status_code == 200
@@ -36,7 +41,10 @@ def test_multi_node_graph():
 
 def test_invalid_input():
     adj_input = AdjustmentRequest(
-        name="invalid", value=10, operations="foo >> invalid >> baz"
+        name="invalid",
+        value=10,
+        operations="foo >> invalid >> baz",
+        argument_mappings=[],
     )
     response = client.post("/adjustment", json=adj_input.model_dump())
     assert response.status_code == 200
