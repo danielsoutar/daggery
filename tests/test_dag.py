@@ -1,9 +1,8 @@
 import pytest
 from pydantic import ConfigDict
 
-from adjustment.dag import DAG, InvalidGraph, UnvalidatedDAG, node_map
+from adjustment.dag import DAG, InvalidGraph, node_map
 from adjustment.node import Bar, Baz, Foo, Node, Quux, Qux
-from adjustment.parse import UnvalidatedNode
 
 
 class AddNode(Node):
@@ -25,11 +24,11 @@ def test_single_node():
     assert isinstance(dag, DAG)
 
     # Create expected instance
-    expected_head = Foo(name="foo0", children=[])
+    expected_head = Foo(name="foo0", children=())
 
     # Compare actual DAG with expected instance
     assert dag.head == expected_head
-    assert dag.head.children == []
+    assert dag.head.children == ()
 
 
 def test_multiple_nodes():
@@ -37,15 +36,15 @@ def test_multiple_nodes():
     assert isinstance(dag, DAG)
 
     # Create expected instances using back-to-front construction
-    expected_third = Baz(name="baz0", children=[])
-    expected_second = Bar(name="bar0", children=[expected_third])
-    expected_head = Foo(name="foo0", children=[expected_second])
+    expected_third = Baz(name="baz0", children=())
+    expected_second = Bar(name="bar0", children=(expected_third,))
+    expected_head = Foo(name="foo0", children=(expected_second,))
 
     # Compare actual DAG with expected instances
     assert dag.head == expected_head
-    assert dag.head.children == [expected_second]
-    assert dag.head.children[0].children == [expected_third]
-    assert dag.head.children[0].children[0].children == []
+    assert dag.head.children == (expected_second,)
+    assert dag.head.children[0].children == (expected_third,)
+    assert dag.head.children[0].children[0].children == ()
 
 
 def test_multiple_nodes_of_same_type():
@@ -53,15 +52,15 @@ def test_multiple_nodes_of_same_type():
     assert isinstance(dag, DAG)
 
     # Create expected instances using back-to-front construction
-    expected_third = Foo(name="foo2", children=[])
-    expected_second = Foo(name="foo1", children=[expected_third])
-    expected_head = Foo(name="foo0", children=[expected_second])
+    expected_third = Foo(name="foo2", children=())
+    expected_second = Foo(name="foo1", children=(expected_third,))
+    expected_head = Foo(name="foo0", children=(expected_second,))
 
     # Compare actual DAG with expected instances
     assert dag.head == expected_head
-    assert dag.head.children == [expected_second]
-    assert dag.head.children[0].children == [expected_third]
-    assert dag.head.children[0].children[0].children == []
+    assert dag.head.children == (expected_second,)
+    assert dag.head.children[0].children == (expected_third,)
+    assert dag.head.children[0].children[0].children == ()
 
 
 def test_from_invalid_string():

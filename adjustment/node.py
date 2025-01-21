@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Tuple
 
 from pydantic import BaseModel, ConfigDict
 
 
 class Node(BaseModel, ABC):
     name: str
-    children: List["Node"] = []
+    children: Tuple["Node", ...] = ()
 
     @abstractmethod
     def transform(self, value):
