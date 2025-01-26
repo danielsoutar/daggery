@@ -22,6 +22,14 @@ class AdjustmentRequest(BaseModel):
     argument_mappings: List[ArgumentMappingMetadata]
 
     @model_validator(mode="after")
+    def operations_not_empty(self):
+        if isinstance(self.operations, str) and self.operations.strip() == "":
+            raise ValueError("operations must not be empty")
+        if isinstance(self.operations, list) and len(self.operations) == 0:
+            raise ValueError("operations must not be empty")
+        return self
+
+    @model_validator(mode="after")
     def argument_mappings_valid(self):
         # If `operations` encodes a graph including nodes with multiple inputs or
         # multiple outputs, argument_mappings should be set to disambiguate these cases.

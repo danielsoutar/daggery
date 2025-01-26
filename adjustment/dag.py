@@ -1,37 +1,29 @@
 from collections import deque
-from typing import Dict, Union
+from typing import Union
 
 from pydantic import BaseModel
 
-from .node import Bar, Baz, Foo, Node, Quux, Qux
-from .parse import EmptyDAG, UnvalidatedDAG, UnvalidatedNode, parse_linear_list_string
+from .graph import InvalidGraph, UnvalidatedDAG, UnvalidatedNode, node_map
+from .node import Foo, Node
+from .request import Operation
 from .utils import logger_factory
 
 logger = logger_factory(__name__)
 
 
-node_map: Dict[str, type[Node]] = {
-    "foo": Foo,
-    "bar": Bar,
-    "baz": Baz,
-    "qux": Qux,
-    "quux": Quux,
-}
-
-
-class InvalidGraph(BaseModel):
-    message: str
-
-
-class DAG(BaseModel):
+class FunctionDAG(BaseModel):
     head: Node
 
     def __init__(self, head: Node):
         # Set the head of the DAG
         super().__init__(head=head)
 
+    # We separate the creation of the DAG from the init method since this allows
+    # returning instances of InvalidGraph, making this code exception-free.
     @classmethod
-    def create(cls, unvalidated_dag: UnvalidatedDAG) -> Union["DAG", InvalidGraph]:
+    def from_unvalidated_dag(
+        cls, unvalidated_dag: UnvalidatedDAG
+    ) -> Union["FunctionDAG", InvalidGraph]:
         node_names = [node.name for node in unvalidated_dag.nodes]
         if len(node_names) != len(set(node_names)):
             return InvalidGraph(message="DAG must contain unique node names")
@@ -46,7 +38,8 @@ class DAG(BaseModel):
         graph_nodes: dict[str, Node] = {}
         child_counts: dict[str, int] = {name: 0 for name in node_names}
         parent_counts: dict[str, int] = {name: 0 for name in node_names}
-        head: Node = Foo(name="dummy", children=[])
+        # Set a dummy node to ensure head is never null.
+        head: Node = Foo(name="dummy", children=())
 
         # Creating immutable nodes back-to-front guarantees an immutable DAG.
         for unvalidated_node in reversed(unvalidated_dag.nodes):
@@ -60,7 +53,7 @@ class DAG(BaseModel):
             child_counts[name] = len(unvalidated_node.children)
 
             node_class = node_map[unvalidated_node.rule]
-            node = node_class(name=name, children=child_nodes)
+            node = node_class(name=name, children=tuple(child_nodes))
 
             graph_nodes[name] = node
             head = node
@@ -78,23 +71,18 @@ class DAG(BaseModel):
         return cls(head=head)
 
     @classmethod
-    def from_input(cls, input_data: str | list[dict]) -> Union["DAG", InvalidGraph]:
-        if isinstance(input_data, str):
-            # Input is a linear string representation
-            linear_dag = parse_linear_list_string(input_data)
-            if isinstance(linear_dag, EmptyDAG):
-                return InvalidGraph(message=linear_dag.message)
-            return cls.create(unvalidated_dag=linear_dag)
-
-        is_list = isinstance(input_data, list)
-        if not (is_list and all(isinstance(node, dict) for node in input_data)):
+    def from_node_list(
+        cls, dag_op_list: list[Operation]
+    ) -> Union["FunctionDAG", InvalidGraph]:
+        is_list = isinstance(dag_op_list, list)
+        if not (is_list and all(isinstance(op, Operation) for op in dag_op_list)):
             return InvalidGraph(
-                message=f"Input must be a list of dictionaries: {input_data}"
+                message=f"Input must be a list of Operation: {dag_op_list}"
             )
 
         nodes, seen_names = [], set()
-        for node_dict in input_data:
-            node = UnvalidatedNode(**node_dict)
+        for op in dag_op_list:
+            node = UnvalidatedNode.model_validate_json(op.model_dump_json())
             seen_names.add(node.name)
             # Check if any children reference a previously seen name
             if any(child in seen_names for child in node.children):
@@ -104,7 +92,7 @@ class DAG(BaseModel):
             nodes.append(node)
         unvalidated_dag = UnvalidatedDAG(nodes=nodes)
 
-        return cls.create(unvalidated_dag)
+        return cls.from_unvalidated_dag(unvalidated_dag)
 
     def transform(self, value: int) -> int:
         node_queue = deque([self.head])

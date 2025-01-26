@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 
-from adjustment.dag import DAG
-
-from .dag import InvalidGraph
+from .dag import FunctionDAG, InvalidGraph
 from .request import AdjustmentRequest
 from .response import AdjustmentResponse
+from .sequence import FunctionSequence, InvalidSequence
 from .utils import logger_factory
 
 logger = logger_factory(__name__)
@@ -28,9 +27,17 @@ async def process_adjustment_request(adjustment_request: AdjustmentRequest):
     ### Response
     - message: Confirmation message including the result of the operations.
     """
-    dag = DAG.from_input(adjustment_request.operations)
+    if isinstance(adjustment_request.operations, str):
+        dag = FunctionSequence.from_string(adjustment_request.operations)
+    else:
+        return AdjustmentResponse(
+            message="Failed to create DAG: operations currently must be a string"
+        )
+        # dag = FunctionDAG.from_node_list(
+        #     adjustment_request.operations, adjustment_request.argument_mappings
+        # )
 
-    if isinstance(dag, InvalidGraph):
+    if isinstance(dag, InvalidGraph) or isinstance(dag, InvalidSequence):
         logger.error("Failed to create DAG")
         return AdjustmentResponse(message=f"Failed to create DAG: {dag.message}")
 

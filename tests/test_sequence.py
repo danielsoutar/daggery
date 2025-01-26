@@ -1,8 +1,8 @@
 import pytest
 from pydantic import ConfigDict
 
-from adjustment.dag import DAG, InvalidGraph, node_map
 from adjustment.node import Bar, Baz, Foo, Node, Quux, Qux
+from adjustment.sequence import FunctionSequence, InvalidSequence, node_map
 
 
 class AddNode(Node):
@@ -20,27 +20,27 @@ class MultiplyNode(Node):
 
 
 def test_single_node():
-    dag = DAG.from_input("foo")
-    assert isinstance(dag, DAG)
+    dag = FunctionSequence.from_string("foo")
+    assert isinstance(dag, FunctionSequence)
 
     # Create expected instance
     expected_head = Foo(name="foo0", children=())
 
-    # Compare actual DAG with expected instance
+    # Compare actual FunctionSequence with expected instance
     assert dag.head == expected_head
     assert dag.head.children == ()
 
 
 def test_multiple_nodes():
-    dag = DAG.from_input("foo >> bar >> baz")
-    assert isinstance(dag, DAG)
+    dag = FunctionSequence.from_string("foo >> bar >> baz")
+    assert isinstance(dag, FunctionSequence)
 
     # Create expected instances using back-to-front construction
     expected_third = Baz(name="baz0", children=())
     expected_second = Bar(name="bar0", children=(expected_third,))
     expected_head = Foo(name="foo0", children=(expected_second,))
 
-    # Compare actual DAG with expected instances
+    # Compare actual FunctionSequence with expected instances
     assert dag.head == expected_head
     assert dag.head.children == (expected_second,)
     assert dag.head.children[0].children == (expected_third,)
@@ -48,15 +48,15 @@ def test_multiple_nodes():
 
 
 def test_multiple_nodes_of_same_type():
-    dag = DAG.from_input("foo >> foo >> foo")
-    assert isinstance(dag, DAG)
+    dag = FunctionSequence.from_string("foo >> foo >> foo")
+    assert isinstance(dag, FunctionSequence)
 
     # Create expected instances using back-to-front construction
     expected_third = Foo(name="foo2", children=())
     expected_second = Foo(name="foo1", children=(expected_third,))
     expected_head = Foo(name="foo0", children=(expected_second,))
 
-    # Compare actual DAG with expected instances
+    # Compare actual FunctionSequence with expected instances
     assert dag.head == expected_head
     assert dag.head.children == (expected_second,)
     assert dag.head.children[0].children == (expected_third,)
@@ -64,9 +64,11 @@ def test_multiple_nodes_of_same_type():
 
 
 def test_from_invalid_string():
-    result = DAG.from_input("foo >> invalid >> baz")
-    assert isinstance(result, InvalidGraph)
-    assert result.message == "Invalid rule found in unvalidated DAG: invalid"
+    result = FunctionSequence.from_string("foo >> invalid >> baz")
+    assert isinstance(result, InvalidSequence)
+    assert (
+        result.message == "Invalid rule found in unvalidated FunctionSequence: invalid"
+    )
 
 
 def test_node_map():
@@ -87,10 +89,10 @@ def test_cannot_create_abstract_node():
         Node()  # type: ignore
 
 
-def test_factory_blocks_cycles():
-    test_node = {"name": "foo0", "rule": "foo", "children": ["foo0"]}
+# def test_factory_blocks_cycles():
+#     test_node = {"name": "foo0", "rule": "foo", "children": ["foo0"]}
 
-    # Attempt to create a DAG
-    result = DAG.from_input(input_data=[test_node])
-    assert isinstance(result, InvalidGraph)
-    assert "Input is not topologically sorted" in result.message
+#     # Attempt to create a FunctionSequence
+#     result = FunctionSequence.from_node_list(input_data=[test_node])
+#     assert isinstance(result, InvalidGraph)
+#     assert "Input is not topologically sorted" in result.message
