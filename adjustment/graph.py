@@ -1,9 +1,10 @@
+from abc import ABC, abstractmethod
 from typing import Dict, List, Union
 
 from pydantic import BaseModel, model_validator
 
 from .node import Bar, Baz, Foo, Node, Quux, Qux
-from .request import ArgumentMappingMetadata
+from .request import ArgumentMappingMetadata, Operation
 from .utils import logger_factory
 
 logger = logger_factory(__name__)
@@ -16,6 +17,23 @@ node_map: Dict[str, type[Node]] = {
     "qux": Qux,
     "quux": Quux,
 }
+
+
+# Abstract type for a consistent interface working with function graphs.
+class AbstractFunctionGraph(BaseModel, ABC):
+    head: Node
+
+    def __init__(self, head: Node):
+        super().__init__(head=head)
+
+    # Define any common methods or properties here
+    @abstractmethod
+    def transform(self, value):
+        pass
+
+    @abstractmethod
+    def serialise(self):
+        pass
 
 
 class EmptyDAG(BaseModel):
@@ -82,27 +100,23 @@ class UnvalidatedDAG(BaseModel):
     @classmethod
     def from_node_list(
         cls,
-        dag_list: List[UnvalidatedNode],
+        dag_op_list: list[Operation],
         argument_mappings: List[ArgumentMappingMetadata],
     ) -> Union["UnvalidatedDAG", InvalidGraph]:
-        # is_list = isinstance(dag_list, list)
-        # if not (
-        #     is_list and all(isinstance(node, UnvalidatedNode) for node in dag_list)
-        # ):
-        #     return InvalidGraph(
-        #         message=f"Input must be a list of dictionaries: {dag_list}"
-        #     )
+        is_list = isinstance(dag_op_list, list)
+        if not (is_list and all(isinstance(op, Operation) for op in dag_op_list)):
+            return InvalidGraph(
+                message=f"Input must be a list of Operation: {dag_op_list}"
+            )
 
-        # nodes, seen_names = [], set()
-        # for node in dag_list:
-        #     node = UnvalidatedNode(**node)
-        #     seen_names.add(node.name)
-        #     # Check if any children reference a previously seen name
-        #     if any(child in seen_names for child in node.children):
-        #         return InvalidGraph(
-        #             message=f"Input is not topologically sorted: {node} references {seen_names}"
-        #         )
-        #     nodes.append(node)
-        return UnvalidatedDAG(
-            nodes=[UnvalidatedNode(name="dummy", rule="foo", children=[])]
-        )
+        nodes, seen_names = [], set()
+        for op in dag_op_list:
+            node = UnvalidatedNode.model_validate_json(op.model_dump_json())
+            seen_names.add(node.name)
+            # Check if any children reference a previously seen name
+            if any(child in seen_names for child in node.children):
+                return InvalidGraph(
+                    message=f"Input is not topologically sorted: {node} references {seen_names}"
+                )
+            nodes.append(node)
+        return cls(nodes=nodes)

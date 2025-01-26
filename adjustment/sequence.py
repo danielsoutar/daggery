@@ -1,15 +1,19 @@
 from typing import Any, Union
 
-from pydantic import BaseModel
-
-from .graph import EmptyDAG, InvalidSequence, UnvalidatedDAG, node_map
+from .graph import (
+    AbstractFunctionGraph,
+    EmptyDAG,
+    InvalidSequence,
+    UnvalidatedDAG,
+    node_map,
+)
 from .node import Node
 from .utils import logger_factory
 
 logger = logger_factory(__name__)
 
 
-class FunctionSequence(BaseModel):
+class FunctionSequence(AbstractFunctionGraph):
     head: Node
 
     def __init__(self, head: Node):
@@ -93,3 +97,7 @@ class FunctionSequence(BaseModel):
                 current_node.children[0] if current_node.children != () else None
             )
         return value
+
+    # TODO: Fill this in.
+    def serialise(self) -> str:
+        return str(self.head)

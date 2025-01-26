@@ -1,17 +1,21 @@
 from collections import deque
-from typing import Union
+from typing import Any, List, Union
 
-from pydantic import BaseModel
-
-from .graph import InvalidGraph, UnvalidatedDAG, UnvalidatedNode, node_map
+from .graph import (
+    AbstractFunctionGraph,
+    EmptyDAG,
+    InvalidGraph,
+    UnvalidatedDAG,
+    node_map,
+)
 from .node import Foo, Node
-from .request import Operation
+from .request import ArgumentMappingMetadata, Operation
 from .utils import logger_factory
 
 logger = logger_factory(__name__)
 
 
-class FunctionDAG(BaseModel):
+class FunctionDAG(AbstractFunctionGraph):
     head: Node
 
     def __init__(self, head: Node):
@@ -72,29 +76,19 @@ class FunctionDAG(BaseModel):
 
     @classmethod
     def from_node_list(
-        cls, dag_op_list: list[Operation]
+        cls,
+        dag_op_list: list[Operation],
+        argument_mappings: List[ArgumentMappingMetadata],
     ) -> Union["FunctionDAG", InvalidGraph]:
-        is_list = isinstance(dag_op_list, list)
-        if not (is_list and all(isinstance(op, Operation) for op in dag_op_list)):
-            return InvalidGraph(
-                message=f"Input must be a list of Operation: {dag_op_list}"
-            )
-
-        nodes, seen_names = [], set()
-        for op in dag_op_list:
-            node = UnvalidatedNode.model_validate_json(op.model_dump_json())
-            seen_names.add(node.name)
-            # Check if any children reference a previously seen name
-            if any(child in seen_names for child in node.children):
-                return InvalidGraph(
-                    message=f"Input is not topologically sorted: {node} references {seen_names}"
-                )
-            nodes.append(node)
-        unvalidated_dag = UnvalidatedDAG(nodes=nodes)
-
+        unvalidated_dag = UnvalidatedDAG.from_node_list(
+            dag_op_list,
+            argument_mappings,
+        )
+        if isinstance(unvalidated_dag, (EmptyDAG, InvalidGraph)):
+            return InvalidGraph(message=unvalidated_dag.message)
         return cls.from_unvalidated_dag(unvalidated_dag)
 
-    def transform(self, value: int) -> int:
+    def transform(self, value: Any) -> Any:
         node_queue = deque([self.head])
         val_queue = deque([value])
 
@@ -114,3 +108,7 @@ class FunctionDAG(BaseModel):
 
         # The last node_output_value is the final transformed result
         return node_output_value
+
+    # TODO: Fill this in.
+    def serialise(self) -> str:
+        return str(self.head)

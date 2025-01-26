@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from .dag import FunctionDAG, InvalidGraph
+from .dag import AbstractFunctionGraph, FunctionDAG, InvalidGraph
 from .request import AdjustmentRequest
 from .response import AdjustmentResponse
 from .sequence import FunctionSequence, InvalidSequence
@@ -9,6 +9,20 @@ from .utils import logger_factory
 logger = logger_factory(__name__)
 
 app = FastAPI()
+
+
+def construct_graph(
+    adjustment_request: AdjustmentRequest,
+) -> AbstractFunctionGraph | InvalidGraph | InvalidSequence:
+    if isinstance(adjustment_request.operations, str):
+        return FunctionSequence.from_string(
+            sequence_string=adjustment_request.operations
+        )
+    else:
+        return FunctionDAG.from_node_list(
+            dag_op_list=adjustment_request.operations,
+            argument_mappings=adjustment_request.argument_mappings,
+        )
 
 
 @app.post("/adjustment", response_model=AdjustmentResponse)
@@ -27,15 +41,7 @@ async def process_adjustment_request(adjustment_request: AdjustmentRequest):
     ### Response
     - message: Confirmation message including the result of the operations.
     """
-    if isinstance(adjustment_request.operations, str):
-        dag = FunctionSequence.from_string(adjustment_request.operations)
-    else:
-        return AdjustmentResponse(
-            message="Failed to create DAG: operations currently must be a string"
-        )
-        # dag = FunctionDAG.from_node_list(
-        #     adjustment_request.operations, adjustment_request.argument_mappings
-        # )
+    dag = construct_graph(adjustment_request)
 
     if isinstance(dag, InvalidGraph) or isinstance(dag, InvalidSequence):
         logger.error("Failed to create DAG")
