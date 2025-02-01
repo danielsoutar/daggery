@@ -196,7 +196,7 @@ class PrevalidatedDAG(BaseModel):
             # Check if any children reference a previously seen name,
             # since we iterate from first to last, this indicates a cycle.
             # By extension this also implies that the input is not topologically
-            # sorted.
+            # sorted. As a bonus it ensures unique names!
             if any(child in seen_names for child in node.children):
                 return InvalidGraph(
                     message=f"Input is not topologically sorted: {node} references {seen_names}"

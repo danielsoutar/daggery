@@ -47,7 +47,7 @@ class FunctionSequence(AbstractFunctionGraph):
             if len(child_nodes) != 1:
                 return InvalidSequence(
                     message=(
-                        "Node with 0 or >1 children found in "
+                        "Non-tail Node with 0 or >1 children found in "
                         f"FunctionSequence: {prevalidated_node}"
                     )
                 )

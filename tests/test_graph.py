@@ -106,6 +106,19 @@ def test_prevalidated_dag_from_node_list_multiple_nodes_multiple_tails():
     assert isinstance(actual, InvalidGraph)
 
 
+def test_prevalidated_dag_from_node_list_multiple_nodes_duplicate_names():
+    operations = OperationList(
+        items=[
+            Operation(name="foo", rule="foo", children=["foo"]),
+            Operation(name="foo", rule="foo", children=["bar"]),
+            Operation(name="bar", rule="bar", children=[]),
+        ]
+    )
+    argument_mappings: list[ArgumentMappingMetadata] = []
+    actual = PrevalidatedDAG.from_node_list(operations, argument_mappings)
+    assert isinstance(actual, InvalidGraph)
+
+
 def test_prevalidated_dag_from_node_list_multiple_nodes_no_mappings_given():
     operations = OperationList(
         items=[
