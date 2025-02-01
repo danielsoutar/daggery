@@ -19,7 +19,6 @@ class FunctionDAG(AbstractFunctionGraph):
     head: Node
 
     def __init__(self, head: Node):
-        # Set the head of the DAG
         super().__init__(head=head)
 
     # We separate the creation of the DAG from the init method since this allows
@@ -84,8 +83,8 @@ class FunctionDAG(AbstractFunctionGraph):
             dag_op_list,
             argument_mappings,
         )
-        if isinstance(unvalidated_dag, (EmptyDAG, InvalidGraph)):
-            return InvalidGraph(message=unvalidated_dag.message)
+        if isinstance(unvalidated_dag, InvalidGraph):
+            return unvalidated_dag
         return cls.from_unvalidated_dag(unvalidated_dag)
 
     def transform(self, value: Any) -> Any:

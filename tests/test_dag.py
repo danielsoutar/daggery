@@ -35,11 +35,13 @@ def dummy_request():
 
 def test_single_node():
     op = Operation(name="foo", rule="foo", children=[])
-    dag = FunctionDAG.from_node_list([op], [])
+    dag = FunctionDAG.from_node_list(
+        dag_op_list=OperationList(items=[op]), argument_mappings=[]
+    )
     assert isinstance(dag, FunctionDAG)
 
     # Create expected instance
-    expected_head = Foo(name="foo0", children=())
+    expected_head = Foo(name="foo", children=())
 
     # Compare actual FunctionSequence with expected instance
     assert dag.head == expected_head
