@@ -139,6 +139,13 @@ class UnvalidatedDAG(BaseModel):
                 else:
                     # Non-root case with no mapping - assumed to be unambiguous,
                     # meaning exactly one input.
+                    if op.name not in parents_of_nodes.keys():
+                        return InvalidGraph(
+                            message=(
+                                f"Input has >1 root node: {op.name} has no "
+                                f"parents in {dag_op_list}"
+                            )
+                        )
                     node_input = parents_of_nodes[op.name][0]
                     node_mappings = {
                         "inputs": [node_input],
@@ -156,11 +163,13 @@ class UnvalidatedDAG(BaseModel):
                 parents_of_nodes[child].append(node.name)
             # Check if any children reference a previously seen name,
             # since we iterate from first to last, this indicates a cycle.
+            # By extension this also implies that the input is not topologically
+            # sorted.
             if any(child in seen_names for child in node.children):
                 return InvalidGraph(
                     message=f"Input is not topologically sorted: {node} references {seen_names}"
                 )
-            # Finally, check that mappings align with the relationships.
+            # Check that mappings align with the relationships.
             parents = [n for n in nodes if n.name in node_mappings["inputs"]]
             correct_relationships = all(
                 node.name in parent.children for parent in parents
@@ -176,4 +185,8 @@ class UnvalidatedDAG(BaseModel):
                     )
                 )
             nodes.append(node)
+        # Ensure there is one tail.
+        tails = list(filter(lambda n: n.children == [], nodes))
+        if len(tails) != 1:
+            return InvalidGraph(message=f"Input has {len(tails)} tails: {tails}")
         return cls(nodes=nodes)

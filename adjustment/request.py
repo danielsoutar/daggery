@@ -8,6 +8,20 @@ class Operation(BaseModel):
     rule: str
     children: List[str] = []
 
+    @model_validator(mode="after")
+    def name_and_rule_not_empty(self):
+        if self.name == "":
+            raise ValueError("An Operation must have a name")
+        if self.rule == "":
+            raise ValueError("An Operation must have a rule")
+        return self
+
+    @model_validator(mode="after")
+    def children_are_unique(self):
+        if len(self.children) != len(set(self.children)):
+            raise ValueError("An Operation cannot have duplicate children")
+        return self
+
 
 class ArgumentMappingMetadata(BaseModel):
     # The name of the node. It should be unique.
@@ -54,10 +68,7 @@ class AdjustmentRequest(BaseModel):
         # If `operations` encodes a graph including nodes with multiple inputs or
         # multiple outputs, argument_mappings should be set to disambiguate these cases.
         # Otherwise argument_mappings can be empty.
-        # For simplicity however we use a type check and the server can perform stronger
-        # validation. argument_mappings can be empty if not needed.
         operations_guaranteed_linear = isinstance(self.operations, str)
-        operations_not_guaranteed_linear = not operations_guaranteed_linear
         argument_mappings_set = len(self.argument_mappings) > 0
         distinct_argument_mappings = set(
             [mapping.node_name for mapping in self.argument_mappings]
@@ -68,10 +79,6 @@ class AdjustmentRequest(BaseModel):
         if operations_guaranteed_linear and argument_mappings_set:
             raise ValueError(
                 "argument_mappings does not need to be set if operations is a string"
-            )
-        if operations_not_guaranteed_linear and not argument_mappings_set:
-            raise ValueError(
-                "argument_mappings must be set if operations is a graph of operations"
             )
         if argument_mappings_not_distinct:
             raise ValueError(

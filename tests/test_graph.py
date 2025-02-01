@@ -67,6 +67,34 @@ def test_unvalidated_dag_from_node_list_single_node():
     )
 
 
+def test_unvalidated_dag_from_node_list_multiple_nodes_multiple_heads():
+    operations = OperationList(
+        items=[
+            Operation(name="foo", rule="foo", children=["baz"]),
+            Operation(name="bar", rule="bar", children=["baz"]),
+            Operation(name="baz", rule="baz", children=[]),
+        ]
+    )
+    argument_mappings = [
+        ArgumentMappingMetadata(node_name="baz", inputs=["foo", "bar"]),
+    ]
+    actual = UnvalidatedDAG.from_node_list(operations, argument_mappings)
+    assert isinstance(actual, InvalidGraph)
+
+
+def test_unvalidated_dag_from_node_list_multiple_nodes_multiple_tails():
+    operations = OperationList(
+        items=[
+            Operation(name="foo", rule="foo", children=["bar", "baz"]),
+            Operation(name="bar", rule="bar", children=[]),
+            Operation(name="baz", rule="baz", children=[]),
+        ]
+    )
+    argument_mappings: list[ArgumentMappingMetadata] = []
+    actual = UnvalidatedDAG.from_node_list(operations, argument_mappings)
+    assert isinstance(actual, InvalidGraph)
+
+
 def test_unvalidated_dag_from_node_list_multiple_nodes_no_mappings_given():
     operations = OperationList(
         items=[
