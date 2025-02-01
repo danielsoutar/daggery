@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from typing import Dict, List, Union
 
 from pydantic import BaseModel, model_validator
 
 from .node import Bar, Baz, Foo, Node, Quux, Qux
-from .request import ArgumentMappingMetadata, Operation
+from .request import ArgumentMappingMetadata, OperationList
 from .utils import logger_factory
 
 logger = logger_factory(__name__)
@@ -23,10 +24,6 @@ node_map: Dict[str, type[Node]] = {
 class AbstractFunctionGraph(BaseModel, ABC):
     head: Node
 
-    def __init__(self, head: Node):
-        super().__init__(head=head)
-
-    # Define any common methods or properties here
     @abstractmethod
     def transform(self, value):
         pass
@@ -49,9 +46,16 @@ class InvalidSequence(BaseModel):
 
 
 class UnvalidatedNode(BaseModel):
+    # The name of this node. It must be unique.
     name: str
+    # The rule of this node.
     rule: str
+    # The names of the nodes that depend on this node.
     children: List[str] = []
+    # The names of the arguments that this node depends on. These must be unique.
+    input_values: List[str] = []
+    # The name of the argument that this node produces. This must be unique.
+    output_value: str
 
 
 class UnvalidatedDAG(BaseModel):
@@ -76,47 +80,100 @@ class UnvalidatedDAG(BaseModel):
 
         rule_names = list(map(str.strip, dag_string.split(">>")))
         nodes = []
-        current_names = {rule: 0 for rule in rule_names}
+        seen_names = {rule: 0 for rule in rule_names}
 
         for i, rule_name in enumerate(rule_names[:-1]):
             # This indexing ensures each node has a unique name.
             parent, child = rule_name, rule_names[i + 1]
-            parent_name = parent + str(current_names[parent])
-            current_names[parent] += 1
-            child_name = child + str(current_names[child])
+            parent_name = parent + str(seen_names[parent])
+            seen_names[parent] += 1
+            child_name = child + str(seen_names[child])
 
             nodes.append(
                 UnvalidatedNode(
                     name=parent_name,
                     rule=parent,
                     children=[child_name],
+                    input_values=[],
+                    output_value="",
                 )
             )
 
-        last_node_name = rule_names[-1] + str(current_names[rule_names[-1]])
-        last_node = UnvalidatedNode(name=last_node_name, rule=rule_names[-1])
+        last_node_name = rule_names[-1] + str(seen_names[rule_names[-1]])
+        last_node = UnvalidatedNode(
+            name=last_node_name,
+            rule=rule_names[-1],
+            output_value="",
+        )
         return cls(nodes=nodes + [last_node])
 
     @classmethod
     def from_node_list(
         cls,
-        dag_op_list: list[Operation],
-        argument_mappings: List[ArgumentMappingMetadata],
+        dag_op_list: OperationList,
+        argument_mappings_list: List[ArgumentMappingMetadata],
     ) -> Union["UnvalidatedDAG", InvalidGraph]:
-        is_list = isinstance(dag_op_list, list)
-        if not (is_list and all(isinstance(op, Operation) for op in dag_op_list)):
-            return InvalidGraph(
-                message=f"Input must be a list of Operation: {dag_op_list}"
+        argument_mappings = {
+            mapping.node_name: {
+                "inputs": mapping.inputs,
+                "output": mapping.node_name,
+            }
+            for mapping in argument_mappings_list
+        }
+        nodes: list[UnvalidatedNode] = []
+        seen_names: set[str] = set()
+        parents_of_nodes: dict[str, list[str]] = defaultdict(list)
+        for op in dag_op_list.items:
+            mapping_available = op.name in argument_mappings.keys()
+            node_mappings: dict = {}
+            if mapping_available:
+                # Non-root case, assumed to have >1 inputs.
+                node_mappings = argument_mappings[op.name]
+            else:
+                if parents_of_nodes == {}:
+                    # This must be the root.
+                    node_mappings = {
+                        "inputs": [],
+                        "output": op.name,
+                    }
+                else:
+                    # Non-root case with no mapping - assumed to be unambiguous,
+                    # meaning exactly one input.
+                    node_input = parents_of_nodes[op.name][0]
+                    node_mappings = {
+                        "inputs": [node_input],
+                        "output": op.name,
+                    }
+            node = UnvalidatedNode(
+                name=op.name,
+                rule=op.rule,
+                children=op.children,
+                input_values=node_mappings["inputs"],
+                output_value=node_mappings["output"],
             )
-
-        nodes, seen_names = [], set()
-        for op in dag_op_list:
-            node = UnvalidatedNode.model_validate_json(op.model_dump_json())
             seen_names.add(node.name)
-            # Check if any children reference a previously seen name
+            for child in node.children:
+                parents_of_nodes[child].append(node.name)
+            # Check if any children reference a previously seen name,
+            # since we iterate from first to last, this indicates a cycle.
             if any(child in seen_names for child in node.children):
                 return InvalidGraph(
                     message=f"Input is not topologically sorted: {node} references {seen_names}"
+                )
+            # Finally, check that mappings align with the relationships.
+            parents = [n for n in nodes if n.name in node_mappings["inputs"]]
+            correct_relationships = all(
+                node.name in parent.children for parent in parents
+            )
+            correct_inputs = set(parents_of_nodes[node.name]) == set(
+                node_mappings["inputs"]
+            )
+            if not correct_relationships or not correct_inputs:
+                return InvalidGraph(
+                    message=(
+                        f"Input has invalid mappings: {node} has {parents=} "
+                        f"but has these mappings: {node_mappings}"
+                    )
                 )
             nodes.append(node)
         return cls(nodes=nodes)

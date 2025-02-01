@@ -9,7 +9,7 @@ from .graph import (
     node_map,
 )
 from .node import Foo, Node
-from .request import ArgumentMappingMetadata, Operation
+from .request import ArgumentMappingMetadata, OperationList
 from .utils import logger_factory
 
 logger = logger_factory(__name__)
@@ -77,7 +77,7 @@ class FunctionDAG(AbstractFunctionGraph):
     @classmethod
     def from_node_list(
         cls,
-        dag_op_list: list[Operation],
+        dag_op_list: OperationList,
         argument_mappings: List[ArgumentMappingMetadata],
     ) -> Union["FunctionDAG", InvalidGraph]:
         unvalidated_dag = UnvalidatedDAG.from_node_list(
@@ -89,25 +89,75 @@ class FunctionDAG(AbstractFunctionGraph):
         return cls.from_unvalidated_dag(unvalidated_dag)
 
     def transform(self, value: Any) -> Any:
-        node_queue = deque([self.head])
-        val_queue = deque([value])
-
-        while node_queue:
-            current_node = node_queue.popleft()
-            node_input_value = val_queue.popleft()
-
-            # Log the node name and intermediate result.
-            logger.info(
-                f"Node: {current_node.__class__.__name__}, "
-                f"Intermediate Result (input to this Node): {node_input_value}"
-            )
-
-            node_output_value = current_node.transform(node_input_value)
-            node_queue.extend(current_node.children)
-            val_queue.extend([node_output_value] * len(current_node.children))
-
-        # The last node_output_value is the final transformed result
-        return node_output_value
+        # The context could contain values and intermediate values.
+        # Alternatively, or maybe additionally, it can also contain
+        # node mappings.
+        # If (intermediate) values are contained but not mappings,
+        # this would imply nodes have to contain mappings instead.
+        # Concretely, it might look something like:
+        #
+        # inputs_available = lambda node: all(
+        #   value in context for value in node.input_values
+        # )
+        # evaluable_nodes = list(map(inputs_available, node_queue))
+        # node_queue = list(filter(lambda n: n not in evaluable_nodes, node_queue))
+        #
+        # for node in evaluable_nodes:
+        #   input_values = [context[value] for value in node.input_values]
+        #   logger.info(
+        #       f"Node: {node.__class__.__name__}, "
+        #       f"Intermediate Result(s): {input_values}
+        #   )
+        #   node_output_value = node.transform(*input_values)
+        #   context[node.output_value] = node_output_value
+        #   node_queue.extend(node.children)
+        # # Last node evaluated will be the tail, and therefore this reference
+        # # will return the final result.
+        # return context[node.output_value]
+        # -------------------------
+        # In other words, nodes would store the names of their input values
+        # and output values. They would need to be mangled in a way that ensures
+        # uniqueness. It would make sense to do this during construction.
+        # TODO: Figure out whether names should be allowed and unique.
+        # Nodes could be stored in a list in topologically-sorted
+        # order, and thus also a valid execution/evaluation order.
+        # Concretely, this would change the above to something like this:
+        #
+        # for node in node_queue:
+        #   input_values = [context[value] for value in node.input_values]
+        #   logger.info(
+        #       f"Node: {node.__class__.__name__}, "
+        #       f"Intermediate Result(s): {input_values}
+        #   )
+        #   node_output_value = node.transform(*input_values)
+        #   context[node.output_value] = node_output_value
+        # # Last node evaluated will be the tail, and therefore this reference
+        # # will return the final result.
+        # return context[node.output_value]
+        # -------------------------
+        # You could additionally optimise this to run nodes concurrently:
+        # offsets = ...
+        # offset_idx, pos = 0, 0
+        # while pos != len(node_queue):
+        #   current_offset = offsets[offset_idx]
+        #   tasks = []
+        #   output_names = []
+        #   for node in node_queue[pos:pos+current_offset]:
+        #       input_values = [context[value] for value in node.input_values]
+        #       logger.info(
+        #           f"Node: {node.__class__.__name__}, "
+        #           f"Intermediate Result(s): {input_values}
+        #       )
+        #       tasks.append(node.transform(*input_values))
+        #       output_names.append(node.output_value)
+        #   output_values = await asyncio.gather(*tasks)
+        #   for output_name, output_value in zip(output_names, output_values):
+        #       context[output_name] = output_value
+        #   pos += current_offset
+        #   offset_idx += 1
+        # return context[node.output_value]
+        #
+        pass
 
     # TODO: Fill this in.
     def serialise(self) -> str:
