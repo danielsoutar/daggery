@@ -4,7 +4,7 @@ from .graph import (
     AbstractFunctionGraph,
     EmptyDAG,
     InvalidSequence,
-    UnvalidatedDAG,
+    PrevalidatedDAG,
     node_map,
 )
 from .node import Node
@@ -23,54 +23,54 @@ class FunctionSequence(AbstractFunctionGraph):
     # We separate the creation of the sequence from the init method since this allows
     # returning instances of InvalidGraph, making this code exception-free.
     @classmethod
-    def from_unvalidated_dag(
-        cls, unvalidated_sequence: UnvalidatedDAG
+    def from_prevalidated_dag(
+        cls, prevalidated_sequence: PrevalidatedDAG
     ) -> Union["FunctionSequence", InvalidSequence]:
-        node_names = [node.name for node in unvalidated_sequence.nodes]
+        node_names = [node.name for node in prevalidated_sequence.nodes]
         if len(node_names) != len(set(node_names)):
             return InvalidSequence(
                 message=f"Non-unique node names found in FunctionSequence: {node_names}"
             )
 
-        node_rules = [node.rule for node in unvalidated_sequence.nodes]
+        node_rules = [node.rule for node in prevalidated_sequence.nodes]
         for rule in node_rules:
             if rule not in node_map.keys():
                 return InvalidSequence(
                     message=f"Invalid rule found in unvalidated FunctionSequence: {rule}"
                 )
 
-        reversed_nodes = reversed(unvalidated_sequence.nodes)
-        unvalidated_tail = next(reversed_nodes)
-        if len(unvalidated_tail.children) != 0:
+        reversed_nodes = reversed(prevalidated_sequence.nodes)
+        prevalidated_tail = next(reversed_nodes)
+        if len(prevalidated_tail.children) != 0:
             return InvalidSequence(
-                message=f"Tail with children found in unvalidated FunctionSequence: {unvalidated_tail}"
+                message=f"Tail with children found in unvalidated FunctionSequence: {prevalidated_tail}"
             )
-        tail_class = node_map[unvalidated_tail.rule]
-        tail = tail_class(name=unvalidated_tail.name, children=tuple())
+        tail_class = node_map[prevalidated_tail.rule]
+        tail = tail_class(name=prevalidated_tail.name, children=tuple())
         head = tail
 
         # Creating immutable nodes back-to-front guarantees an immutable FunctionSequence.
-        for unvalidated_node in reversed_nodes:
-            name = unvalidated_node.name
-            child_nodes = unvalidated_node.children
+        for prevalidated_node in reversed_nodes:
+            name = prevalidated_node.name
+            child_nodes = prevalidated_node.children
 
             if len(child_nodes) != 1:
                 return InvalidSequence(
                     message=(
                         "Node with 0 or >1 children found in unvalidated "
-                        f"FunctionSequence: {unvalidated_node}"
+                        f"FunctionSequence: {prevalidated_node}"
                     )
                 )
             if child_nodes[0] != head.name:
                 return InvalidSequence(
                     message=(
                         "Node with invalid child found in unvalidated "
-                        f"FunctionSequence: {unvalidated_node} (node), "
+                        f"FunctionSequence: {prevalidated_node} (node), "
                         f"{head} (expected child)"
                     )
                 )
 
-            node_class = node_map[unvalidated_node.rule]
+            node_class = node_map[prevalidated_node.rule]
             head = node_class(name=name, children=(head,))
 
         return cls(head=head)
@@ -79,10 +79,10 @@ class FunctionSequence(AbstractFunctionGraph):
     def from_string(
         cls, sequence_string: str
     ) -> Union["FunctionSequence", InvalidSequence]:
-        unvalidated_sequence = UnvalidatedDAG.from_string(sequence_string)
-        if isinstance(unvalidated_sequence, EmptyDAG):
-            return InvalidSequence(message=unvalidated_sequence.message)
-        return cls.from_unvalidated_dag(unvalidated_sequence)
+        prevalidated_sequence = PrevalidatedDAG.from_string(sequence_string)
+        if isinstance(prevalidated_sequence, EmptyDAG):
+            return InvalidSequence(message=prevalidated_sequence.message)
+        return cls.from_prevalidated_dag(prevalidated_sequence)
 
     def transform(self, value: Any) -> Any:
         current_node: Node | None = self.head

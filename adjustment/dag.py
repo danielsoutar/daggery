@@ -5,7 +5,7 @@ from .graph import (
     AbstractFunctionGraph,
     EmptyDAG,
     InvalidGraph,
-    UnvalidatedDAG,
+    PrevalidatedDAG,
     node_map,
 )
 from .node import Foo, Node
@@ -24,14 +24,14 @@ class FunctionDAG(AbstractFunctionGraph):
     # We separate the creation of the DAG from the init method since this allows
     # returning instances of InvalidGraph, making this code exception-free.
     @classmethod
-    def from_unvalidated_dag(
-        cls, unvalidated_dag: UnvalidatedDAG
+    def from_prevalidated_dag(
+        cls, prevalidated_dag: PrevalidatedDAG
     ) -> Union["FunctionDAG", InvalidGraph]:
-        node_names = [node.name for node in unvalidated_dag.nodes]
+        node_names = [node.name for node in prevalidated_dag.nodes]
         if len(node_names) != len(set(node_names)):
             return InvalidGraph(message="DAG must contain unique node names")
 
-        node_rules = [node.rule for node in unvalidated_dag.nodes]
+        node_rules = [node.rule for node in prevalidated_dag.nodes]
         for rule in node_rules:
             if rule not in node_map.keys():
                 return InvalidGraph(
@@ -45,17 +45,17 @@ class FunctionDAG(AbstractFunctionGraph):
         head: Node = Foo(name="dummy", children=())
 
         # Creating immutable nodes back-to-front guarantees an immutable DAG.
-        for unvalidated_node in reversed(unvalidated_dag.nodes):
-            name = unvalidated_node.name
+        for prevalidated_node in reversed(prevalidated_dag.nodes):
+            name = prevalidated_node.name
             child_nodes: list[Node] = []
 
-            for child_name in unvalidated_node.children:
+            for child_name in prevalidated_node.children:
                 child_nodes.append(graph_nodes[child_name])
                 parent_counts[child_name] += 1
 
-            child_counts[name] = len(unvalidated_node.children)
+            child_counts[name] = len(prevalidated_node.children)
 
-            node_class = node_map[unvalidated_node.rule]
+            node_class = node_map[prevalidated_node.rule]
             node = node_class(name=name, children=tuple(child_nodes))
 
             graph_nodes[name] = node
@@ -79,13 +79,13 @@ class FunctionDAG(AbstractFunctionGraph):
         dag_op_list: OperationList,
         argument_mappings: List[ArgumentMappingMetadata],
     ) -> Union["FunctionDAG", InvalidGraph]:
-        unvalidated_dag = UnvalidatedDAG.from_node_list(
+        prevalidated_dag = PrevalidatedDAG.from_node_list(
             dag_op_list,
             argument_mappings,
         )
-        if isinstance(unvalidated_dag, InvalidGraph):
-            return unvalidated_dag
-        return cls.from_unvalidated_dag(unvalidated_dag)
+        if isinstance(prevalidated_dag, InvalidGraph):
+            return prevalidated_dag
+        return cls.from_prevalidated_dag(prevalidated_dag)
 
     def transform(self, value: Any) -> Any:
         # The context could contain values and intermediate values.

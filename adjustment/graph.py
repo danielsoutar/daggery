@@ -45,7 +45,7 @@ class InvalidSequence(BaseModel):
     message: str
 
 
-class UnvalidatedNode(BaseModel):
+class PrevalidatedNode(BaseModel):
     # The name of this node. It must be unique.
     name: str
     # The rule of this node.
@@ -57,23 +57,49 @@ class UnvalidatedNode(BaseModel):
     # The name of the argument that this node produces. This must be unique.
     output_value: str
 
+    @model_validator(mode="after")
+    def name_and_rule_not_empty(self):
+        if self.name == "":
+            raise ValueError("PrevalidatedNode must have a name")
+        if self.rule == "":
+            raise ValueError("PrevalidatedNode must have a rule")
+        return self
 
-class UnvalidatedDAG(BaseModel):
+    @model_validator(mode="after")
+    def unique_names(self):
+        if len(self.children) != len(set(self.children)):
+            raise ValueError("PrevalidatedNode must have unique children")
+        if len(self.input_values) != len(set(self.input_values)):
+            raise ValueError("PrevalidatedNode must have unique input values")
+        if self.output_value != self.name:
+            raise ValueError(
+                "PrevalidatedNode must have an output value set to its name"
+            )
+        return self
+
+
+class PrevalidatedDAG(BaseModel):
     """
-    This represents an unvalidated DAG, assumed to be in topologically-sorted
-    order.
+    This represents an pre-validated DAG. It guarantees the following on
+    construction:
+
+    * The graph cannot be empty.
+    * The graph has exactly one head, and exactly one tail.
+    * The graph is topologically sorted.
+    * Each node has a unique name.
+    * There is at most one connection between any pair of nodes.
     """
 
-    nodes: List[UnvalidatedNode]
+    nodes: List[PrevalidatedNode]
 
     @model_validator(mode="after")
     def dag_not_empty(self):
         if len(self.nodes) == 0:
-            raise ValueError("UnvalidatedDAG must contain at least one node")
+            raise ValueError("PrevalidatedDAG must contain at least one node")
         return self
 
     @classmethod
-    def from_string(cls, dag_string: str) -> Union["UnvalidatedDAG", EmptyDAG]:
+    def from_string(cls, dag_string: str) -> Union["PrevalidatedDAG", EmptyDAG]:
         dag_string = dag_string.strip()
         if dag_string == "":
             return EmptyDAG(message="DAG string is empty and therefore invalid")
@@ -81,29 +107,35 @@ class UnvalidatedDAG(BaseModel):
         rule_names = list(map(str.strip, dag_string.split(">>")))
         nodes = []
         seen_names = {rule: 0 for rule in rule_names}
+        node_parents: dict[str, str] = {}
 
         for i, rule_name in enumerate(rule_names[:-1]):
             # This indexing ensures each node has a unique name.
-            parent, child = rule_name, rule_names[i + 1]
-            parent_name = parent + str(seen_names[parent])
-            seen_names[parent] += 1
+            current, child = rule_name, rule_names[i + 1]
+            current_name = current + str(seen_names[current])
+            seen_names[current] += 1
             child_name = child + str(seen_names[child])
+            parent_name = node_parents.get(current_name, None)
 
             nodes.append(
-                UnvalidatedNode(
-                    name=parent_name,
-                    rule=parent,
+                PrevalidatedNode(
+                    name=current_name,
+                    rule=current,
                     children=[child_name],
-                    input_values=[],
-                    output_value="",
+                    input_values=[parent_name] if parent_name else [],
+                    output_value=current_name,
                 )
             )
+            node_parents[child_name] = current_name
 
         last_node_name = rule_names[-1] + str(seen_names[rule_names[-1]])
-        last_node = UnvalidatedNode(
+        parent_name = node_parents.get(last_node_name, None)
+
+        last_node = PrevalidatedNode(
             name=last_node_name,
             rule=rule_names[-1],
-            output_value="",
+            input_values=[parent_name] if parent_name else [],
+            output_value=last_node_name,
         )
         return cls(nodes=nodes + [last_node])
 
@@ -112,7 +144,7 @@ class UnvalidatedDAG(BaseModel):
         cls,
         dag_op_list: OperationList,
         argument_mappings_list: List[ArgumentMappingMetadata],
-    ) -> Union["UnvalidatedDAG", InvalidGraph]:
+    ) -> Union["PrevalidatedDAG", InvalidGraph]:
         argument_mappings = {
             mapping.node_name: {
                 "inputs": mapping.inputs,
@@ -120,7 +152,7 @@ class UnvalidatedDAG(BaseModel):
             }
             for mapping in argument_mappings_list
         }
-        nodes: list[UnvalidatedNode] = []
+        nodes: list[PrevalidatedNode] = []
         seen_names: set[str] = set()
         parents_of_nodes: dict[str, list[str]] = defaultdict(list)
         for op in dag_op_list.items:
@@ -151,7 +183,7 @@ class UnvalidatedDAG(BaseModel):
                         "inputs": [node_input],
                         "output": op.name,
                     }
-            node = UnvalidatedNode(
+            node = PrevalidatedNode(
                 name=op.name,
                 rule=op.rule,
                 children=op.children,
