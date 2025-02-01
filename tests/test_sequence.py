@@ -66,9 +66,7 @@ def test_multiple_nodes_of_same_type():
 def test_from_invalid_string():
     result = FunctionSequence.from_string("foo >> invalid >> baz")
     assert isinstance(result, InvalidSequence)
-    assert (
-        result.message == "Invalid rule found in unvalidated FunctionSequence: invalid"
-    )
+    assert result.message == "Invalid rule found in FunctionSequence: invalid"
 
 
 def test_node_map():

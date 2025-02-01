@@ -26,25 +26,15 @@ class FunctionSequence(AbstractFunctionGraph):
     def from_prevalidated_dag(
         cls, prevalidated_sequence: PrevalidatedDAG
     ) -> Union["FunctionSequence", InvalidSequence]:
-        node_names = [node.name for node in prevalidated_sequence.nodes]
-        if len(node_names) != len(set(node_names)):
-            return InvalidSequence(
-                message=f"Non-unique node names found in FunctionSequence: {node_names}"
-            )
-
         node_rules = [node.rule for node in prevalidated_sequence.nodes]
         for rule in node_rules:
             if rule not in node_map.keys():
                 return InvalidSequence(
-                    message=f"Invalid rule found in unvalidated FunctionSequence: {rule}"
+                    message=f"Invalid rule found in FunctionSequence: {rule}"
                 )
 
         reversed_nodes = reversed(prevalidated_sequence.nodes)
         prevalidated_tail = next(reversed_nodes)
-        if len(prevalidated_tail.children) != 0:
-            return InvalidSequence(
-                message=f"Tail with children found in unvalidated FunctionSequence: {prevalidated_tail}"
-            )
         tail_class = node_map[prevalidated_tail.rule]
         tail = tail_class(name=prevalidated_tail.name, children=tuple())
         head = tail
@@ -57,14 +47,14 @@ class FunctionSequence(AbstractFunctionGraph):
             if len(child_nodes) != 1:
                 return InvalidSequence(
                     message=(
-                        "Node with 0 or >1 children found in unvalidated "
+                        "Node with 0 or >1 children found in "
                         f"FunctionSequence: {prevalidated_node}"
                     )
                 )
             if child_nodes[0] != head.name:
                 return InvalidSequence(
                     message=(
-                        "Node with invalid child found in unvalidated "
+                        "Node with invalid child found in "
                         f"FunctionSequence: {prevalidated_node} (node), "
                         f"{head} (expected child)"
                     )
