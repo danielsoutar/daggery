@@ -90,36 +90,6 @@ class FunctionDAG(BaseModel):
         return cls.from_prevalidated_dag(prevalidated_dag)
 
     def transform(self, value: Any) -> Any:
-        # We could additionally optimise this to run nodes concurrently.
-        # When building the graph, we keep track of all nodes at the same
-        # logical 'level'. A logical level is simply a set of nodes where
-        # none of them have any parent/child relationships between them,
-        # direct or otherwise.
-        # Starting from the tail (which is the last level and has size 1),
-        # we build up a set of nodes where we check none of them are each
-        # other's parent/child. When this eventually happens, we know we
-        # have crossed into another level. So we could store an offset
-        # into the nodes array that marks the boundaries of levels.
-        # Then in the code below we could effectively spark off each node
-        # up to the next offset, and then call a gather over the
-        # corresponding coroutines. One smart way of doing this might be
-        # to store a list of lists, removing the need for any indexing
-        # arithmetic and simplifying the looping like the synchronous
-        # case.
-
-        # context = {"__INPUT__": value}
-        # for level in node_levels:
-        #     input_values_for_nodes = [
-        #         tuple(context[v] for v in n.input_values) for n in level
-        #     ]
-        #     tasks = [n.transform(*vs) for n in level for vs in input_values_for_nodes]
-        #     output_values = await asyncio.gather(*tasks)
-        #     zipped_nodes = zip(level, input_values_for_nodes, output_values)
-        #     for node, input_vs, output_v in zipped_nodes:
-        #         self._pretty_log_node(node, input_vs, output_v)
-        #         context[node.output_value] = output_v
-        # return context[node.output_value]
-
         context = {"__INPUT__": value}
         # The nodes are topologically sorted. As it turns out, this is also
         # a valid order of evaluation - by the time a node is reached, all

@@ -3,6 +3,7 @@ from typing import Dict, List, Union
 
 from pydantic import BaseModel, model_validator
 
+from .async_node import AsyncFoo, AsyncNode, AsyncPing
 from .node import Bar, Baz, Foo, Node, Quux, Qux
 from .request import ArgumentMappingMetadata, OperationList
 from .utils import logger_factory
@@ -16,6 +17,12 @@ node_map: Dict[str, type[Node]] = {
     "baz": Baz,
     "qux": Qux,
     "quux": Quux,
+}
+
+
+async_node_map: Dict[str, type[AsyncNode]] = {
+    "foo": AsyncFoo,
+    "ping": AsyncPing,
 }
 
 

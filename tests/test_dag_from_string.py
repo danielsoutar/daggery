@@ -76,13 +76,13 @@ def test_from_invalid_string():
 def test_empty_string():
     result = FunctionDAG.from_string("")
     assert isinstance(result, InvalidGraph)
-    assert "DAG string is empty" in result.message
+    assert "DAG string is empty and therefore invalid" == result.message
 
 
 def test_whitespace_only_string():
     result = FunctionDAG.from_string("   ")
     assert isinstance(result, InvalidGraph)
-    assert "DAG string is empty" in result.message
+    assert "DAG string is empty and therefore invalid" == result.message
 
 
 def test_node_map():
