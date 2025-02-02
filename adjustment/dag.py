@@ -19,8 +19,8 @@ class AnnotatedNode(BaseModel):
     input_values: Tuple[str, ...]
     output_value: str
 
-    def transform(self, value: Any) -> Any:
-        return self.naked_node.transform(value)
+    def transform(self, *args) -> Any:
+        return self.naked_node.transform(*args)
 
 
 class FunctionDAG(BaseModel):
@@ -34,7 +34,9 @@ class FunctionDAG(BaseModel):
     # returning instances of InvalidGraph, making this code exception-free.
     @classmethod
     def from_prevalidated_dag(
-        cls, prevalidated_dag: PrevalidatedDAG
+        cls,
+        prevalidated_dag: PrevalidatedDAG,
+        node_map: dict[str, type[Node]] = node_map,
     ) -> Union["FunctionDAG", InvalidGraph]:
         node_rules = [node.rule for node in prevalidated_dag.nodes]
         for rule in node_rules:
@@ -150,14 +152,19 @@ class FunctionDAG(BaseModel):
 
         context: dict[str, Any] = {}
         for node in self.nodes:
-            input_values = [context[value] for value in node.input_values]
-            logger.info(
-                (
-                    f"Node: {node.__class__.__name__}, "
-                    f"Intermediate Result(s): {input_values}"
-                )
-            )
+            # The input value(s) should be the parameter of this function when
+            # and only when the node is the head.
+            if node == self.head:
+                input_values = (value,)
+            else:
+                input_values = tuple([context[val] for val in node.input_values])
             node_output_value = node.transform(*input_values)
+            formatted_inputs = (
+                input_values[0] if len(input_values) == 1 else input_values
+            )
+            logger.info(f"Node: {node.naked_node.name}:")
+            logger.info(f"  Input(s): {formatted_inputs}")
+            logger.info(f"  Output(s): {node_output_value}")
             context[node.output_value] = node_output_value
         return node_output_value
 

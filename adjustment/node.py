@@ -9,7 +9,7 @@ class Node(BaseModel, ABC):
     children: Tuple["Node", ...] = ()
 
     @abstractmethod
-    def transform(self, value):
+    def transform(self, *args):
         pass  # Abstract method
 
 
