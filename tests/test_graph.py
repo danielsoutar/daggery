@@ -16,7 +16,6 @@ def test_prevalidated_dag_from_string_single_node():
                 rule="foo",
                 children=[],
                 input_nodes=[],
-                output_value="foo0",
             ),
         ]
     )
@@ -32,21 +31,18 @@ def test_prevalidated_dag_from_string_multiple_nodes():
                 rule="foo",
                 children=["bar0"],
                 input_nodes=[],
-                output_value="foo0",
             ),
             PrevalidatedNode(
                 name="bar0",
                 rule="bar",
                 children=["baz0"],
                 input_nodes=["foo0"],
-                output_value="bar0",
             ),
             PrevalidatedNode(
                 name="baz0",
                 rule="baz",
                 children=[],
                 input_nodes=["bar0"],
-                output_value="baz0",
             ),
         ]
     )
@@ -69,7 +65,6 @@ def test_prevalidated_dag_from_node_list_single_node():
                 rule="foo",
                 children=[],
                 input_nodes=[],
-                output_value="foo",
             ),
         ]
     )
@@ -137,21 +132,18 @@ def test_prevalidated_dag_from_node_list_multiple_nodes_no_mappings_given():
                 rule="foo",
                 children=["bar"],
                 input_nodes=[],
-                output_value="foo",
             ),
             PrevalidatedNode(
                 name="bar",
                 rule="bar",
                 children=["baz"],
                 input_nodes=["foo"],
-                output_value="bar",
             ),
             PrevalidatedNode(
                 name="baz",
                 rule="baz",
                 children=[],
                 input_nodes=["bar"],
-                output_value="baz",
             ),
         ]
     )
@@ -197,21 +189,18 @@ def test_prevalidated_dag_from_node_list_multiple_nodes_some_mappings_given():
                 rule="foo",
                 children=["bar"],
                 input_nodes=[],
-                output_value="foo",
             ),
             PrevalidatedNode(
                 name="bar",
                 rule="bar",
                 children=["baz"],
                 input_nodes=["foo"],
-                output_value="bar",
             ),
             PrevalidatedNode(
                 name="baz",
                 rule="baz",
                 children=[],
                 input_nodes=["bar"],
-                output_value="baz",
             ),
         ]
     )
@@ -243,21 +232,18 @@ def test_prevalidated_dag_from_node_list_multiple_nodes_all_mappings_given():
                 rule="foo",
                 children=["bar"],
                 input_nodes=[],
-                output_value="foo",
             ),
             PrevalidatedNode(
                 name="bar",
                 rule="bar",
                 children=["baz"],
                 input_nodes=["foo"],
-                output_value="bar",
             ),
             PrevalidatedNode(
                 name="baz",
                 rule="baz",
                 children=[],
                 input_nodes=["bar"],
-                output_value="baz",
             ),
         ]
     )
@@ -302,28 +288,24 @@ def test_prevalidated_dag_from_node_list_diamond_structure_all_mappings_given():
                 rule="foo",
                 children=["bar", "baz"],
                 input_nodes=[],
-                output_value="foo",
             ),
             PrevalidatedNode(
                 name="bar",
                 rule="bar",
                 children=["qux"],
                 input_nodes=["foo"],
-                output_value="bar",
             ),
             PrevalidatedNode(
                 name="baz",
                 rule="baz",
                 children=["qux"],
                 input_nodes=["foo"],
-                output_value="baz",
             ),
             PrevalidatedNode(
                 name="qux",
                 rule="qux",
                 children=[],
                 input_nodes=["bar", "baz"],
-                output_value="qux",
             ),
         ]
     )
@@ -350,28 +332,24 @@ def test_prevalidated_dag_from_node_list_diamond_structure_only_required_mapping
                 rule="foo",
                 children=["bar", "baz"],
                 input_nodes=[],
-                output_value="foo",
             ),
             PrevalidatedNode(
                 name="bar",
                 rule="bar",
                 children=["qux"],
                 input_nodes=["foo"],
-                output_value="bar",
             ),
             PrevalidatedNode(
                 name="baz",
                 rule="baz",
                 children=["qux"],
                 input_nodes=["foo"],
-                output_value="baz",
             ),
             PrevalidatedNode(
                 name="qux",
                 rule="qux",
                 children=[],
                 input_nodes=["bar", "baz"],
-                output_value="qux",
             ),
         ]
     )

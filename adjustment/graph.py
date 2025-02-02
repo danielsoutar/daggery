@@ -27,10 +27,6 @@ class InvalidGraph(BaseModel):
     message: str
 
 
-class InvalidSequence(BaseModel):
-    message: str
-
-
 class PrevalidatedNode(BaseModel):
     # The name of this node. It must be unique.
     name: str

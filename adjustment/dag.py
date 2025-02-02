@@ -2,11 +2,7 @@ from typing import Any, List, Tuple, Union
 
 from pydantic import BaseModel
 
-from .graph import (
-    InvalidGraph,
-    PrevalidatedDAG,
-    node_map,
-)
+from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG, node_map
 from .node import Node
 from .request import ArgumentMappingMetadata, OperationList
 from .utils import logger_factory
@@ -28,6 +24,10 @@ class FunctionDAG(BaseModel):
     @property
     def head(self) -> AnnotatedNode:
         return self.nodes[0]
+
+    @property
+    def is_sequence(self) -> bool:
+        return all(len(node.input_nodes) <= 1 for node in self.nodes)
 
     # We separate the creation of the DAG from the init method since this allows
     # returning instances of InvalidGraph, making this code exception-free.
@@ -80,6 +80,13 @@ class FunctionDAG(BaseModel):
         )
         if isinstance(prevalidated_dag, InvalidGraph):
             return prevalidated_dag
+        return cls.from_prevalidated_dag(prevalidated_dag)
+
+    @classmethod
+    def from_string(cls, dag_string: str) -> Union["FunctionDAG", InvalidGraph]:
+        prevalidated_dag = PrevalidatedDAG.from_string(dag_string)
+        if isinstance(prevalidated_dag, EmptyDAG):
+            return InvalidGraph(message=prevalidated_dag.message)
         return cls.from_prevalidated_dag(prevalidated_dag)
 
     def transform(self, value: Any) -> Any:
