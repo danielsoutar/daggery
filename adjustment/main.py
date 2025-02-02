@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from .dag import AbstractFunctionGraph, FunctionDAG, InvalidGraph
+from .dag import FunctionDAG, InvalidGraph
 from .request import AdjustmentRequest
 from .response import AdjustmentResponse
 from .sequence import FunctionSequence, InvalidSequence
@@ -13,7 +13,7 @@ app = FastAPI()
 
 def construct_graph(
     adjustment_request: AdjustmentRequest,
-) -> AbstractFunctionGraph | InvalidGraph | InvalidSequence:
+) -> FunctionSequence | FunctionDAG | InvalidGraph | InvalidSequence:
     if isinstance(adjustment_request.operations, str):
         return FunctionSequence.from_string(
             sequence_string=adjustment_request.operations

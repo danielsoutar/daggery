@@ -85,12 +85,3 @@ def test_node_map():
 def test_cannot_create_abstract_node():
     with pytest.raises(TypeError, match="Can't instantiate abstract class Node"):
         Node()  # type: ignore
-
-
-# def test_factory_blocks_cycles():
-#     test_node = {"name": "foo0", "rule": "foo", "children": ["foo0"]}
-
-#     # Attempt to create a FunctionSequence
-#     result = FunctionSequence.from_node_list(input_data=[test_node])
-#     assert isinstance(result, InvalidGraph)
-#     assert "Input is not topologically sorted" in result.message

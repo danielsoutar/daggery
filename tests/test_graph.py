@@ -266,7 +266,7 @@ def test_prevalidated_dag_from_node_list_multiple_nodes_all_mappings_given():
     )
 
 
-def test_prevalidated_dag_from_node_list_diamond_structure_invalid_mappings_missing():
+def test_prevalidated_dag_from_node_list_diamond_structure_no_mappings_given():
     operations = OperationList(
         items=[
             Operation(name="foo", rule="foo", children=["bar", "baz"]),
@@ -275,12 +275,7 @@ def test_prevalidated_dag_from_node_list_diamond_structure_invalid_mappings_miss
             Operation(name="qux", rule="qux", children=[]),
         ]
     )
-    argument_mappings = [
-        ArgumentMappingMetadata(node_name="foo", inputs=[]),
-        ArgumentMappingMetadata(node_name="bar", inputs=[]),
-        ArgumentMappingMetadata(node_name="baz", inputs=[]),
-        ArgumentMappingMetadata(node_name="qux", inputs=[]),
-    ]
+    argument_mappings: list[ArgumentMappingMetadata] = []
     actual = PrevalidatedDAG.from_node_list(operations, argument_mappings)
     assert isinstance(actual, InvalidGraph)
 
@@ -298,6 +293,54 @@ def test_prevalidated_dag_from_node_list_diamond_structure_all_mappings_given():
         ArgumentMappingMetadata(node_name="foo", inputs=[]),
         ArgumentMappingMetadata(node_name="bar", inputs=["foo"]),
         ArgumentMappingMetadata(node_name="baz", inputs=["foo"]),
+        ArgumentMappingMetadata(node_name="qux", inputs=["bar", "baz"]),
+    ]
+    expected_output = PrevalidatedDAG(
+        nodes=[
+            PrevalidatedNode(
+                name="foo",
+                rule="foo",
+                children=["bar", "baz"],
+                input_values=[],
+                output_value="foo",
+            ),
+            PrevalidatedNode(
+                name="bar",
+                rule="bar",
+                children=["qux"],
+                input_values=["foo"],
+                output_value="bar",
+            ),
+            PrevalidatedNode(
+                name="baz",
+                rule="baz",
+                children=["qux"],
+                input_values=["foo"],
+                output_value="baz",
+            ),
+            PrevalidatedNode(
+                name="qux",
+                rule="qux",
+                children=[],
+                input_values=["bar", "baz"],
+                output_value="qux",
+            ),
+        ]
+    )
+    actual = PrevalidatedDAG.from_node_list(operations, argument_mappings)
+    assert expected_output == actual
+
+
+def test_prevalidated_dag_from_node_list_diamond_structure_only_required_mappings_given():
+    operations = OperationList(
+        items=[
+            Operation(name="foo", rule="foo", children=["bar", "baz"]),
+            Operation(name="bar", rule="bar", children=["qux"]),
+            Operation(name="baz", rule="baz", children=["qux"]),
+            Operation(name="qux", rule="qux", children=[]),
+        ]
+    )
+    argument_mappings = [
         ArgumentMappingMetadata(node_name="qux", inputs=["bar", "baz"]),
     ]
     expected_output = PrevalidatedDAG(

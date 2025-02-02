@@ -20,19 +20,6 @@ node_map: Dict[str, type[Node]] = {
 }
 
 
-# Abstract type for a consistent interface working with function graphs.
-class AbstractFunctionGraph(BaseModel, ABC):
-    head: Node
-
-    @abstractmethod
-    def transform(self, value):
-        pass
-
-    @abstractmethod
-    def serialise(self):
-        pass
-
-
 class EmptyDAG(BaseModel):
     message: str
 

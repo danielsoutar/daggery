@@ -1,25 +1,34 @@
-from collections import deque
-from typing import Any, List, Union
+from typing import Any, List, Tuple, Union
+
+from pydantic import BaseModel
 
 from .graph import (
-    AbstractFunctionGraph,
-    EmptyDAG,
     InvalidGraph,
     PrevalidatedDAG,
     node_map,
 )
-from .node import Foo, Node
+from .node import Node
 from .request import ArgumentMappingMetadata, OperationList
 from .utils import logger_factory
 
 logger = logger_factory(__name__)
 
 
-class FunctionDAG(AbstractFunctionGraph):
-    head: Node
+class AnnotatedNode(BaseModel):
+    naked_node: Node
+    input_values: Tuple[str, ...]
+    output_value: str
 
-    def __init__(self, head: Node):
-        super().__init__(head=head)
+    def transform(self, value: Any) -> Any:
+        return self.naked_node.transform(value)
+
+
+class FunctionDAG(BaseModel):
+    nodes: Tuple[AnnotatedNode, ...]
+
+    @property
+    def head(self) -> AnnotatedNode:
+        return self.nodes[0]
 
     # We separate the creation of the DAG from the init method since this allows
     # returning instances of InvalidGraph, making this code exception-free.
@@ -27,10 +36,6 @@ class FunctionDAG(AbstractFunctionGraph):
     def from_prevalidated_dag(
         cls, prevalidated_dag: PrevalidatedDAG
     ) -> Union["FunctionDAG", InvalidGraph]:
-        node_names = [node.name for node in prevalidated_dag.nodes]
-        if len(node_names) != len(set(node_names)):
-            return InvalidGraph(message="DAG must contain unique node names")
-
         node_rules = [node.rule for node in prevalidated_dag.nodes]
         for rule in node_rules:
             if rule not in node_map.keys():
@@ -39,39 +44,26 @@ class FunctionDAG(AbstractFunctionGraph):
                 )
 
         graph_nodes: dict[str, Node] = {}
-        child_counts: dict[str, int] = {name: 0 for name in node_names}
-        parent_counts: dict[str, int] = {name: 0 for name in node_names}
-        # Set a dummy node to ensure head is never null.
-        head: Node = Foo(name="dummy", children=())
+        ordered_nodes: list[AnnotatedNode] = []
 
         # Creating immutable nodes back-to-front guarantees an immutable DAG.
         for prevalidated_node in reversed(prevalidated_dag.nodes):
             name = prevalidated_node.name
-            child_nodes: list[Node] = []
-
-            for child_name in prevalidated_node.children:
-                child_nodes.append(graph_nodes[child_name])
-                parent_counts[child_name] += 1
-
-            child_counts[name] = len(prevalidated_node.children)
+            child_nodes = [graph_nodes[child] for child in prevalidated_node.children]
 
             node_class = node_map[prevalidated_node.rule]
             node = node_class(name=name, children=tuple(child_nodes))
 
             graph_nodes[name] = node
-            head = node
+            ordered_nodes.append(
+                AnnotatedNode(
+                    naked_node=node,
+                    input_values=tuple(prevalidated_node.input_values),
+                    output_value=prevalidated_node.output_value,
+                )
+            )
 
-        # Confirm there is exactly one head node. The head has no parent.
-        heads = list(filter(lambda count: count == 0, parent_counts.values()))
-        if len(heads) != 1:
-            return InvalidGraph(message=f"DAG must have exactly one head node: {heads}")
-
-        # Confirm there is exactly one tail node. The tail has no children.
-        tails = list(filter(lambda count: count == 0, child_counts.values()))
-        if len(tails) != 1:
-            return InvalidGraph(message=f"DAG must have exactly one tail node: {tails}")
-
-        return cls(head=head)
+        return cls(nodes=tuple(reversed(ordered_nodes)))
 
     @classmethod
     def from_node_list(
@@ -155,8 +147,19 @@ class FunctionDAG(AbstractFunctionGraph):
         #   pos += current_offset
         #   offset_idx += 1
         # return context[node.output_value]
-        #
-        pass
+
+        context: dict[str, Any] = {}
+        for node in self.nodes:
+            input_values = [context[value] for value in node.input_values]
+            logger.info(
+                (
+                    f"Node: {node.__class__.__name__}, "
+                    f"Intermediate Result(s): {input_values}"
+                )
+            )
+            node_output_value = node.transform(*input_values)
+            context[node.output_value] = node_output_value
+        return node_output_value
 
     # TODO: Fill this in.
     def serialise(self) -> str:

@@ -1,7 +1,8 @@
 from typing import Any, Union
 
+from pydantic import BaseModel
+
 from .graph import (
-    AbstractFunctionGraph,
     EmptyDAG,
     InvalidSequence,
     PrevalidatedDAG,
@@ -13,7 +14,7 @@ from .utils import logger_factory
 logger = logger_factory(__name__)
 
 
-class FunctionSequence(AbstractFunctionGraph):
+class FunctionSequence(BaseModel):
     head: Node
 
     def __init__(self, head: Node):
@@ -39,24 +40,16 @@ class FunctionSequence(AbstractFunctionGraph):
         tail = tail_class(name=prevalidated_tail.name, children=tuple())
         head = tail
 
-        # Creating immutable nodes back-to-front guarantees an immutable FunctionSequence.
+        # Creating immutable nodes back-to-front guarantees an immutable Sequence.
         for prevalidated_node in reversed_nodes:
             name = prevalidated_node.name
             child_nodes = prevalidated_node.children
 
-            if len(child_nodes) != 1:
+            if len(child_nodes) > 1:
                 return InvalidSequence(
                     message=(
-                        "Non-tail Node with 0 or >1 children found in "
+                        "Node with >1 children found in "
                         f"FunctionSequence: {prevalidated_node}"
-                    )
-                )
-            if child_nodes[0] != head.name:
-                return InvalidSequence(
-                    message=(
-                        "Node with invalid child found in "
-                        f"FunctionSequence: {prevalidated_node} (node), "
-                        f"{head} (expected child)"
                     )
                 )
 
