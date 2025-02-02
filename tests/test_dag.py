@@ -44,8 +44,7 @@ def test_single_node():
 
     expected_head = AnnotatedNode(
         naked_node=AddNode(name="add", children=()),
-        input_values=(),
-        output_value="add",
+        input_nodes=("__INPUT__",),
     )
 
     assert dag.nodes == (expected_head,)
@@ -78,9 +77,9 @@ def test_diamond_structure():
 def test_split_level_structure():
     ops = OperationList(
         items=[
-            Operation(name="add0", rule="add", children=["exp0", "multiply", "add1"]),
+            Operation(name="add0", rule="add", children=["exp0", "mul0", "add1"]),
             Operation(name="add1", rule="add", children=["add2"]),
-            Operation(name="multiply", rule="multiply", children=["exp0"]),
+            Operation(name="mul0", rule="multiply", children=["exp0"]),
             Operation(name="add2", rule="add", children=["exp1"]),
             Operation(name="exp0", rule="exp", children=["exp1"]),
             Operation(name="exp1", rule="exp", children=[]),
@@ -88,13 +87,13 @@ def test_split_level_structure():
     )
     #  ----- add0 -----
     #  |      |       |
-    #  |   multiply  add1
+    #  |     mul0    add1
     # exp0 ---|       |
     #  |             add2
     #  |------|-------|
     #        exp1
     mappings: list[ArgumentMappingMetadata] = [
-        ArgumentMappingMetadata(node_name="exp0", inputs=["add0", "multiply"]),
+        ArgumentMappingMetadata(node_name="exp0", inputs=["add0", "mul0"]),
         ArgumentMappingMetadata(node_name="exp1", inputs=["exp0", "add2"]),
     ]
     prevalidated_dag = PrevalidatedDAG.from_node_list(ops, mappings)

@@ -16,8 +16,7 @@ logger = logger_factory(__name__)
 
 class AnnotatedNode(BaseModel):
     naked_node: Node
-    input_values: Tuple[str, ...]
-    output_value: str
+    input_nodes: Tuple[str, ...]
 
     def transform(self, *args) -> Any:
         return self.naked_node.transform(*args)
@@ -57,11 +56,13 @@ class FunctionDAG(BaseModel):
             node = node_class(name=name, children=tuple(child_nodes))
 
             graph_nodes[name] = node
+            # We have a special case for the root node, enabling a standard
+            # fetching of inputs in the transform.
+            input_nodes = tuple(prevalidated_node.input_nodes) or ("__INPUT__",)
             ordered_nodes.append(
                 AnnotatedNode(
                     naked_node=node,
-                    input_values=tuple(prevalidated_node.input_values),
-                    output_value=prevalidated_node.output_value,
+                    input_nodes=input_nodes,
                 )
             )
 
@@ -82,51 +83,9 @@ class FunctionDAG(BaseModel):
         return cls.from_prevalidated_dag(prevalidated_dag)
 
     def transform(self, value: Any) -> Any:
-        # The context could contain values and intermediate values.
-        # Alternatively, or maybe additionally, it can also contain
-        # node mappings.
-        # If (intermediate) values are contained but not mappings,
-        # this would imply nodes have to contain mappings instead.
-        # Concretely, it might look something like:
-        #
-        # inputs_available = lambda node: all(
-        #   value in context for value in node.input_values
-        # )
-        # evaluable_nodes = list(map(inputs_available, node_queue))
-        # node_queue = list(filter(lambda n: n not in evaluable_nodes, node_queue))
-        #
-        # for node in evaluable_nodes:
-        #   input_values = [context[value] for value in node.input_values]
-        #   logger.info(
-        #       f"Node: {node.__class__.__name__}, "
-        #       f"Intermediate Result(s): {input_values}
-        #   )
-        #   node_output_value = node.transform(*input_values)
-        #   context[node.output_value] = node_output_value
-        #   node_queue.extend(node.children)
-        # # Last node evaluated will be the tail, and therefore this reference
-        # # will return the final result.
-        # return context[node.output_value]
-        # -------------------------
-        # In other words, nodes would store the names of their input values
-        # and output values. They would need to be mangled in a way that ensures
-        # uniqueness. It would make sense to do this during construction.
-        # TODO: Figure out whether names should be allowed and unique.
         # Nodes could be stored in a list in topologically-sorted
         # order, and thus also a valid execution/evaluation order.
         # Concretely, this would change the above to something like this:
-        #
-        # for node in node_queue:
-        #   input_values = [context[value] for value in node.input_values]
-        #   logger.info(
-        #       f"Node: {node.__class__.__name__}, "
-        #       f"Intermediate Result(s): {input_values}
-        #   )
-        #   node_output_value = node.transform(*input_values)
-        #   context[node.output_value] = node_output_value
-        # # Last node evaluated will be the tail, and therefore this reference
-        # # will return the final result.
-        # return context[node.output_value]
         # -------------------------
         # You could additionally optimise this to run nodes concurrently:
         # offsets = ...
@@ -150,23 +109,32 @@ class FunctionDAG(BaseModel):
         #   offset_idx += 1
         # return context[node.output_value]
 
-        context: dict[str, Any] = {}
+        context = {"__INPUT__": value}
+        # The nodes are topologically sorted. As it turns out, this is also
+        # a valid order of evaluation - by the time a node is reached, all
+        # of its parents will already have been evaluated.
         for node in self.nodes:
-            # The input value(s) should be the parameter of this function when
-            # and only when the node is the head.
-            if node == self.head:
-                input_values = (value,)
-            else:
-                input_values = tuple([context[val] for val in node.input_values])
+            input_values = tuple(context[node_name] for node_name in node.input_nodes)
             node_output_value = node.transform(*input_values)
-            formatted_inputs = (
-                input_values[0] if len(input_values) == 1 else input_values
-            )
-            logger.info(f"Node: {node.naked_node.name}:")
-            logger.info(f"  Input(s): {formatted_inputs}")
-            logger.info(f"  Output(s): {node_output_value}")
-            context[node.output_value] = node_output_value
+            self._pretty_log_node(node, input_values, node_output_value)
+            context[node.naked_node.name] = node_output_value
         return node_output_value
+
+    def _pretty_log_node(
+        self,
+        node: AnnotatedNode,
+        input_values: tuple[Any, ...],
+        output_value: Any,
+    ) -> None:
+        input_node_names = node.input_nodes
+        zipped_inputs = zip(input_values, input_node_names)
+        tied_inputs = tuple(
+            f"{inp_val}@{inp_name}" for inp_val, inp_name in zipped_inputs
+        )
+        formatted_inputs = tied_inputs[0] if len(tied_inputs) == 1 else tied_inputs
+        logger.info(f"Node: {node.naked_node.name}:")
+        logger.info(f"  Input(s): {formatted_inputs}")
+        logger.info(f"  Output(s): {output_value}")
 
     # TODO: Fill this in.
     def serialise(self) -> str:

@@ -38,10 +38,8 @@ class PrevalidatedNode(BaseModel):
     rule: str
     # The names of the nodes that depend on this node.
     children: List[str] = []
-    # The names of the arguments that this node depends on. These must be unique.
-    input_values: List[str] = []
-    # The name of the argument that this node produces. This must be unique.
-    output_value: str
+    # The names of the nodes that this node depends on. These must be unique.
+    input_nodes: List[str] = []
 
     @model_validator(mode="after")
     def name_and_rule_not_empty(self):
@@ -55,12 +53,8 @@ class PrevalidatedNode(BaseModel):
     def unique_names(self):
         if len(self.children) != len(set(self.children)):
             raise ValueError("PrevalidatedNode must have unique children")
-        if len(self.input_values) != len(set(self.input_values)):
-            raise ValueError("PrevalidatedNode must have unique input values")
-        if self.output_value != self.name:
-            raise ValueError(
-                "PrevalidatedNode must have an output value set to its name"
-            )
+        if len(self.input_nodes) != len(set(self.input_nodes)):
+            raise ValueError("PrevalidatedNode must have unique input nodes")
         return self
 
 
@@ -108,8 +102,7 @@ class PrevalidatedDAG(BaseModel):
                     name=current_name,
                     rule=current,
                     children=[child_name],
-                    input_values=[parent_name] if parent_name else [],
-                    output_value=current_name,
+                    input_nodes=[parent_name] if parent_name else [],
                 )
             )
             node_parents[child_name] = current_name
@@ -120,8 +113,7 @@ class PrevalidatedDAG(BaseModel):
         last_node = PrevalidatedNode(
             name=last_node_name,
             rule=rule_names[-1],
-            input_values=[parent_name] if parent_name else [],
-            output_value=last_node_name,
+            input_nodes=[parent_name] if parent_name else [],
         )
         return cls(nodes=nodes + [last_node])
 
@@ -132,10 +124,7 @@ class PrevalidatedDAG(BaseModel):
         argument_mappings_list: List[ArgumentMappingMetadata],
     ) -> Union["PrevalidatedDAG", InvalidGraph]:
         argument_mappings = {
-            mapping.node_name: {
-                "inputs": mapping.inputs,
-                "output": mapping.node_name,
-            }
+            mapping.node_name: {"inputs": mapping.inputs}
             for mapping in argument_mappings_list
         }
         nodes: list[PrevalidatedNode] = []
@@ -150,10 +139,7 @@ class PrevalidatedDAG(BaseModel):
             else:
                 if parents_of_nodes == {}:
                     # This must be the root.
-                    node_mappings = {
-                        "inputs": [],
-                        "output": op.name,
-                    }
+                    node_mappings = {"inputs": []}
                 else:
                     # Non-root case with no mapping - assumed to be unambiguous,
                     # meaning exactly one input.
@@ -165,16 +151,12 @@ class PrevalidatedDAG(BaseModel):
                             )
                         )
                     node_input = parents_of_nodes[op.name][0]
-                    node_mappings = {
-                        "inputs": [node_input],
-                        "output": op.name,
-                    }
+                    node_mappings = {"inputs": [node_input]}
             node = PrevalidatedNode(
                 name=op.name,
                 rule=op.rule,
                 children=op.children,
-                input_values=node_mappings["inputs"],
-                output_value=node_mappings["output"],
+                input_nodes=node_mappings["inputs"],
             )
             seen_names.add(node.name)
             for child in node.children:

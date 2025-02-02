@@ -70,16 +70,15 @@ class FunctionSequence(BaseModel):
     def transform(self, value: Any) -> Any:
         current_node: Node | None = self.head
         while current_node is not None:
-            # Log the node name and intermediate result.
-            logger.info(
-                f"Node: {current_node.__class__.__name__}, "
-                f"Intermediate Result: {value}"
-            )
             value = current_node.transform(value)
-            current_node = (
-                current_node.children[0] if current_node.children != () else None
-            )
+            self._pretty_log_node(current_node, value)
+            children = current_node.children or (None,)
+            current_node = children[0]
         return value
+
+    def _pretty_log_node(self, current_node: Node, value: Any) -> None:
+        logger.info(f"Node: {current_node.name}:")
+        logger.info(f"  Output(s): {value}")
 
     # TODO: Fill this in.
     def serialise(self) -> str:
