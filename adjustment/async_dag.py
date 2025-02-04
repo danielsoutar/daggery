@@ -92,7 +92,7 @@ class AsyncFunctionDAG(BaseModel):
             else:
                 current_level.append(annotated_node)
 
-        # Ensure the last level as added.
+        # Ensure the last level is added.
         ordered_nodes.append(tuple(reversed(current_level)))
         return cls(nodes=tuple(reversed(ordered_nodes)))
 

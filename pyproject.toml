@@ -11,6 +11,8 @@ fastapi = "^0.115.5"
 pydantic = "^2.10.2"
 uvicorn = "^0.32.1"
 colorlog = "^6.9.0"
+requests = "^2.32.3"
+pytest-cov = "^6.0.0"
 
 
 [tool.poetry.group.dev.dependencies]

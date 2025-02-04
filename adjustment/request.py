@@ -33,6 +33,14 @@ class ArgumentMappingMetadata(BaseModel):
     inputs: List[str] = []
     # Nodes always have one output, so no need to name them.
 
+    @model_validator(mode="after")
+    def name_not_empty(self):
+        if self.node_name.strip() == "":
+            raise ValueError("An ArgumentMappingMetadata must name a node")
+        # No need to check inputs are not empty, as this is technically
+        # allowed if the head is specified, albeit redundant.
+        return self
+
 
 class OperationList(BaseModel):
     """
