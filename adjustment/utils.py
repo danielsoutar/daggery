@@ -5,7 +5,7 @@ from functools import wraps
 import colorlog
 
 
-def logger_factory(name: str) -> logging.Logger:
+def _logger_factory(name: str) -> logging.Logger:
     # Create a logger instance
     logger = logging.getLogger(name)
 
@@ -37,13 +37,22 @@ def logger_factory(name: str) -> logging.Logger:
 
 
 def logged(logger):
+    """
+    This is a simple example of a logging decorator for a Node.
+    It `wraps` the enclosing method for niceties like debugging
+    and logging. It logs the name of the node, the inputs, and
+    the output.
+    """
+
     def decorator(method):
         @wraps(method)
         def wrapper(self, *args, **kwargs):
             logger.info(f"{self.name}:")
             logger.info(f"  args: {args}")
             logger.info(f"  kwargs: {kwargs}")
-            return method(self, *args, **kwargs)
+            output = method(self, *args, **kwargs)
+            logger.info(f"  Output: {output}")
+            return output
 
         return wrapper
 
@@ -51,6 +60,12 @@ def logged(logger):
 
 
 def timed(logger):
+    """
+    This is a simple example of a timing decorator for a Node.
+    It `wraps` the enclosing method for niceties like debugging
+    and logging. It logs the duration of the node execution time.
+    """
+
     def decorator(method):
         @wraps(method)
         def wrapper(self, *args, **kwargs):
@@ -67,12 +82,26 @@ def timed(logger):
 
 
 def bypass(error_types, logger):
+    """
+    This is a simple example of a bypass decorator for a Node.
+    It `wraps` the enclosing method for niceties like debugging
+    and logging. It 'bypasses' or skips calling the underlying
+    method if any of the inputs match one of the given error
+    types. This is similar to the use of `bind` in FP-style
+    languages, as Operations do not need to deal with errors
+    from other Operations.
+    """
+
     def decorator(method):
         @wraps(method)
         def wrapper(self, *args, **kwargs):
-            if len(args) > 0 and any(isinstance(arg, error_types) for arg in args):
+            # kwargs are not propagated by Operations, so
+            # just checking args is sufficient.
+            if any(isinstance(arg, error_types) for arg in args):
                 logger.info(f"{self.name} bypassed.")
-                return args[0]
+                # If multiple errors, return the first one.
+                # TODO: Consider whether multiple outputs should be supported.
+                return next(filter(lambda a: isinstance(a, error_types), args))
             return method(self, *args, **kwargs)
 
         return wrapper

@@ -6,9 +6,9 @@ from pydantic import BaseModel
 from .async_node import AsyncNode
 from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG
 from .request import ArgumentMappingMetadata, OperationList
-from .utils import logger_factory
+from .utils import _logger_factory
 
-logger = logger_factory(__name__)
+logger = _logger_factory(__name__)
 
 
 class AsyncAnnotatedNode(BaseModel):

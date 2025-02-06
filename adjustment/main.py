@@ -6,9 +6,9 @@ from .graph import InvalidGraph
 from .node import Node
 from .request import AdjustmentRequest
 from .response import AdjustmentResponse
-from .utils import logged, logger_factory, timed
+from .utils import _logger_factory, logged, timed
 
-logger = logger_factory(__name__)
+logger = _logger_factory(__name__)
 
 app = FastAPI()
 
