@@ -93,7 +93,7 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
 
 ## TODO:
 
-- [ ] Add HTTP client decorator to `Node.transform`.
+- [X] Add HTTP client decorator to `Node.transform`.
 - [ ] Confirm graph substitution works with nested DAGs inside Operations.
 - [ ] Add examples.
 - [ ] Add unit tests for the above.

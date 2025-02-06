@@ -3,6 +3,7 @@ import time
 from functools import wraps
 
 import colorlog
+import requests
 
 
 def _logger_factory(name: str) -> logging.Logger:
@@ -107,6 +108,27 @@ def bypass(error_types, logger):
                 # TODO: Consider whether multiple outputs should be supported.
                 return next(filter(lambda a: isinstance(a, error_types), args))
             return method(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def http_client(base_url):
+    """
+    This is a simple example of a HTTP client decorator for a Node.
+    It `wraps` the enclosing method for niceties like debugging
+    and logging. It implements dependency injection and provides a
+    configured HTTP client.
+    """
+
+    def client(ep, pl):
+        return requests.post(base_url + ep, json=pl)
+
+    def decorator(method):
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            return method(self, *args, client, **kwargs)
 
         return wrapper
 

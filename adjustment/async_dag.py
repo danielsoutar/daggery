@@ -26,8 +26,8 @@ class AsyncFunctionDAG(BaseModel):
     def is_sequence(self) -> bool:
         return all(
             len(node.input_nodes) <= 1
-            for node_level in self.nodes
-            for node in node_level
+            for node_batch in self.nodes
+            for node in node_batch
         )
 
     # We separate the creation of the DAG from the init method since this allows
@@ -46,7 +46,7 @@ class AsyncFunctionDAG(BaseModel):
                 )
 
         graph_nodes: dict[str, AsyncNode] = {}
-        current_level: list[AsyncAnnotatedNode] = []
+        current_batch: list[AsyncAnnotatedNode] = []
         ordered_nodes: list[tuple[AsyncAnnotatedNode, ...]] = []
 
         # Creating immutable nodes back-to-front guarantees an immutable DAG.
@@ -74,21 +74,21 @@ class AsyncFunctionDAG(BaseModel):
                 naked_node=node,
                 input_nodes=input_nodes,
             )
-            # Given the order of traversal, check if any nodes in the current level
+            # Given the order of traversal, check if any nodes in the current batch
             # are children of this node. Given the sortedness we know they can't be
             # its parents.
             child_names = [child.name for child in child_nodes]
-            found_new_level = any(
-                sibling.naked_node.name in child_names for sibling in current_level
+            found_new_batch = any(
+                sibling.naked_node.name in child_names for sibling in current_batch
             )
-            if found_new_level:
-                ordered_nodes.append(tuple(reversed(current_level)))
-                current_level = [annotated_node]
+            if found_new_batch:
+                ordered_nodes.append(tuple(reversed(current_batch)))
+                current_batch = [annotated_node]
             else:
-                current_level.append(annotated_node)
+                current_batch.append(annotated_node)
 
-        # Ensure the last level is added.
-        ordered_nodes.append(tuple(reversed(current_level)))
+        # Ensure the last batch is added.
+        ordered_nodes.append(tuple(reversed(current_batch)))
         return cls(nodes=tuple(reversed(ordered_nodes)))
 
     @classmethod
@@ -123,10 +123,10 @@ class AsyncFunctionDAG(BaseModel):
         # a valid order of evaluation - by the time a node is reached, all
         # of its parents will already have been evaluated.
         # When nodes are independent of each other - which we group in
-        # 'levels', we can evaluate them concurrently.
-        for level in self.nodes:
+        # 'batches', we can evaluate them concurrently.
+        for batch in self.nodes:
             nodes_with_args = [
-                (n, tuple(context[v] for v in n.input_nodes)) for n in level
+                (n, tuple(context[v] for v in n.input_nodes)) for n in batch
             ]
             tasks = [n.transform(*vs) for (n, vs) in nodes_with_args]
             output_values = await asyncio.gather(*tasks)
