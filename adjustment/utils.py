@@ -90,6 +90,10 @@ def bypass(error_types, logger):
     types. This is similar to the use of `bind` in FP-style
     languages, as Operations do not need to deal with errors
     from other Operations.
+
+    However, only the first error will be propagated. Handling
+    multiple errors and transforming them either requires a
+    custom decorator or Operation.
     """
 
     def decorator(method):
