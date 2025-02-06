@@ -65,12 +65,12 @@ class PrevalidatedDAG(BaseModel):
         return self
 
     @classmethod
-    def from_string(cls, dag_string: str) -> Union["PrevalidatedDAG", EmptyDAG]:
-        dag_string = dag_string.strip()
-        if dag_string == "":
+    def from_string(cls, graph_description: str) -> Union["PrevalidatedDAG", EmptyDAG]:
+        graph_description = graph_description.strip()
+        if graph_description == "":
             return EmptyDAG(message="DAG string is empty and therefore invalid")
 
-        rule_names = list(map(str.strip, dag_string.split(">>")))
+        rule_names = list(map(str.strip, graph_description.split(">>")))
         nodes = []
         seen_names = {rule: 0 for rule in rule_names}
         node_parents: dict[str, str] = {}
@@ -106,7 +106,7 @@ class PrevalidatedDAG(BaseModel):
     @classmethod
     def from_node_list(
         cls,
-        dag_op_list: OperationList,
+        graph_description: OperationList,
         argument_mappings_list: List[ArgumentMappingMetadata],
     ) -> Union["PrevalidatedDAG", InvalidGraph]:
         argument_mappings = {
@@ -116,7 +116,7 @@ class PrevalidatedDAG(BaseModel):
         nodes: list[PrevalidatedNode] = []
         seen_names: set[str] = set()
         parents_of_nodes: dict[str, list[str]] = defaultdict(list)
-        for op in dag_op_list.items:
+        for op in graph_description.items:
             mapping_available = op.name in argument_mappings.keys()
             node_mappings: dict = {}
             if mapping_available:
@@ -133,7 +133,7 @@ class PrevalidatedDAG(BaseModel):
                         return InvalidGraph(
                             message=(
                                 f"Input has >1 root node: {op.name} has no "
-                                f"parents in {dag_op_list}"
+                                f"parents in {graph_description}"
                             )
                         )
                     node_input = parents_of_nodes[op.name][0]

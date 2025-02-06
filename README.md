@@ -69,9 +69,9 @@ result = await dag.transform(1)
 
 This library adheres to the following mantras:
 
-### Latest and greatest developer tools used wherever possible
+### Latest and greatest developer tools used (correctly) wherever possible
 
-`uv`, `mypy`, and `ruff`, as examples.
+`uv`, `mypy`, `ruff`, and `pytest-xdist` are all examples. Warnings are fixed immediately.
 
 ### Everything is a value, including errors - code should be exception-free
 

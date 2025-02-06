@@ -94,12 +94,12 @@ class AsyncFunctionDAG(BaseModel):
     @classmethod
     def from_node_list(
         cls,
-        dag_op_list: OperationList,
+        graph_description: OperationList,
         argument_mappings: List[ArgumentMappingMetadata],
         custom_node_map: dict[str, type[AsyncNode]],
     ) -> Union["AsyncFunctionDAG", InvalidGraph]:
         prevalidated_dag = PrevalidatedDAG.from_node_list(
-            dag_op_list,
+            graph_description,
             argument_mappings,
         )
         if isinstance(prevalidated_dag, InvalidGraph):
@@ -109,10 +109,10 @@ class AsyncFunctionDAG(BaseModel):
     @classmethod
     def from_string(
         cls,
-        dag_string: str,
+        graph_description: str,
         custom_node_map: dict[str, type[AsyncNode]],
     ) -> Union["AsyncFunctionDAG", InvalidGraph]:
-        prevalidated_dag = PrevalidatedDAG.from_string(dag_string)
+        prevalidated_dag = PrevalidatedDAG.from_string(graph_description)
         if isinstance(prevalidated_dag, EmptyDAG):
             return InvalidGraph(message=prevalidated_dag.message)
         return cls.from_prevalidated_dag(prevalidated_dag, custom_node_map)

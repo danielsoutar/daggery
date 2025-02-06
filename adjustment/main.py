@@ -72,12 +72,12 @@ def construct_graph(
 ) -> FunctionDAG | InvalidGraph:
     if isinstance(adjustment_request.operations, str):
         return FunctionDAG.from_string(
-            dag_string=adjustment_request.operations,
+            graph_description=adjustment_request.operations,
             custom_node_map=custom_node_map,
         )
     else:
         return FunctionDAG.from_node_list(
-            dag_op_list=adjustment_request.operations,
+            graph_description=adjustment_request.operations,
             argument_mappings=adjustment_request.argument_mappings,
             custom_node_map=custom_node_map,
         )

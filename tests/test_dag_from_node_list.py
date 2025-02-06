@@ -38,7 +38,7 @@ def test_single_node():
     ops = OperationList(items=[Operation(name="add", rule="add", children=[])])
     mappings: list[ArgumentMappingMetadata] = []
     dag = FunctionDAG.from_node_list(
-        dag_op_list=ops,
+        graph_description=ops,
         argument_mappings=mappings,
         custom_node_map=mock_node_map,
     )
@@ -65,7 +65,7 @@ def test_diamond_structure():
         ArgumentMappingMetadata(node_name="exp0", inputs=["add1", "mul0"]),
     ]
     dag = FunctionDAG.from_node_list(
-        dag_op_list=ops,
+        graph_description=ops,
         argument_mappings=mappings,
         custom_node_map=mock_node_map,
     )
