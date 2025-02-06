@@ -97,7 +97,11 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
 - [ ] Confirm graph substitution works with nested DAGs inside Operations.
 - [ ] Add examples.
 - [ ] Add unit tests for the above.
+- [ ] Tidy up/standardise terminology and add docstrings/doc pages.
 - [ ] Migrate to `uv`.
+- [ ] Showcase to others.
+- [ ] ???
+- [ ] Profit!
 
 ## Usage
 
