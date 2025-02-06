@@ -4,7 +4,7 @@ from typing import Any, List, Tuple, Union
 from pydantic import BaseModel
 
 from .async_node import AsyncNode
-from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG, async_node_map
+from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG
 from .request import ArgumentMappingMetadata, OperationList
 from .utils import logger_factory
 
@@ -23,10 +23,6 @@ class AsyncFunctionDAG(BaseModel):
     nodes: Tuple[Tuple[AsyncAnnotatedNode, ...], ...]
 
     @property
-    def head(self) -> AsyncAnnotatedNode:
-        return self.nodes[0][0]
-
-    @property
     def is_sequence(self) -> bool:
         return all(
             len(node.input_nodes) <= 1
@@ -40,11 +36,11 @@ class AsyncFunctionDAG(BaseModel):
     def from_prevalidated_dag(
         cls,
         prevalidated_dag: PrevalidatedDAG,
-        node_map: dict[str, type[AsyncNode]] = async_node_map,
+        custom_node_map: dict[str, type[AsyncNode]],
     ) -> Union["AsyncFunctionDAG", InvalidGraph]:
         node_rules = [node.rule for node in prevalidated_dag.nodes]
         for rule in node_rules:
-            if rule not in node_map.keys():
+            if rule not in custom_node_map.keys():
                 return InvalidGraph(
                     message=f"Invalid rule found in unvalidated DAG: {rule}"
                 )
@@ -54,21 +50,20 @@ class AsyncFunctionDAG(BaseModel):
         ordered_nodes: list[tuple[AsyncAnnotatedNode, ...]] = []
 
         # Creating immutable nodes back-to-front guarantees an immutable DAG.
-        # When building the graph, we keep track of all nodes at the same
-        # logical 'level'. A logical level is simply a set of nodes where
-        # none of them have any parent/child relationships between them,
-        # direct or otherwise. This implies they are independent of each other.
-        # Starting from the tail (which is the last level and has size 1),
-        # we build up a set of nodes where we check none of them are each
-        # other's parent/child. If and when this eventually happens, we know
-        # we have crossed into another level. Consequently, this set of nodes
-        # is stored as a level, and we create the next set with the current
-        # node in the next level.
+        # When building the graph, we keep track of all nodes in the same
+        # logical 'batch'. A batch is just a set of nodes where none of them
+        # have any parent/child relationships between them, direct or otherwise.
+        # This implies they are independent of each other. Starting from the
+        # tail (which is the last batch and has size 1), we build up a set of
+        # nodes and ensure none of them are each other's parent/child. If and
+        # when this eventually happens, we know we have crossed into another
+        # batch. Consequently, this set of nodes is stored as a batch, and we
+        # create the next set with the current node in the next batch.
         for prevalidated_node in reversed(prevalidated_dag.nodes):
             name = prevalidated_node.name
             child_nodes = [graph_nodes[child] for child in prevalidated_node.children]
 
-            node_class = node_map[prevalidated_node.rule]
+            node_class = custom_node_map[prevalidated_node.rule]
             node = node_class(name=name, children=tuple(child_nodes))
 
             graph_nodes[name] = node
@@ -101,6 +96,7 @@ class AsyncFunctionDAG(BaseModel):
         cls,
         dag_op_list: OperationList,
         argument_mappings: List[ArgumentMappingMetadata],
+        custom_node_map: dict[str, type[AsyncNode]],
     ) -> Union["AsyncFunctionDAG", InvalidGraph]:
         prevalidated_dag = PrevalidatedDAG.from_node_list(
             dag_op_list,
@@ -108,14 +104,18 @@ class AsyncFunctionDAG(BaseModel):
         )
         if isinstance(prevalidated_dag, InvalidGraph):
             return prevalidated_dag
-        return cls.from_prevalidated_dag(prevalidated_dag)
+        return cls.from_prevalidated_dag(prevalidated_dag, custom_node_map)
 
     @classmethod
-    def from_string(cls, dag_string: str) -> Union["AsyncFunctionDAG", InvalidGraph]:
+    def from_string(
+        cls,
+        dag_string: str,
+        custom_node_map: dict[str, type[AsyncNode]],
+    ) -> Union["AsyncFunctionDAG", InvalidGraph]:
         prevalidated_dag = PrevalidatedDAG.from_string(dag_string)
         if isinstance(prevalidated_dag, EmptyDAG):
             return InvalidGraph(message=prevalidated_dag.message)
-        return cls.from_prevalidated_dag(prevalidated_dag)
+        return cls.from_prevalidated_dag(prevalidated_dag, custom_node_map)
 
     async def transform(self, value: Any) -> Any:
         context = {"__INPUT__": value}
@@ -151,7 +151,3 @@ class AsyncFunctionDAG(BaseModel):
         logger.info(f"Node: {node.naked_node.name}:")
         logger.info(f"  Input(s): {formatted_inputs}")
         logger.info(f"  Output(s): {output_value}")
-
-    # TODO: Fill this in.
-    def serialise(self) -> str:
-        return str(self.head)

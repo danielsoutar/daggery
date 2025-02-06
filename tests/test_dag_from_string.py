@@ -1,26 +1,39 @@
 import pytest
 from pydantic import ConfigDict
 
-from adjustment.dag import AnnotatedNode, FunctionDAG, InvalidGraph, node_map
-from adjustment.node import Bar, Baz, Foo, Node, Quux, Qux
+from adjustment.dag import AnnotatedNode, FunctionDAG, InvalidGraph
+from adjustment.node import Node
 
 
-class AddNode(Node):
+class Foo(Node):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    def transform(self, value: float) -> float:
-        return value + 1
+    def transform(self, value: int) -> int:
+        return value * value
 
 
-class MultiplyNode(Node):
+class Bar(Node):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    def transform(self, value: float) -> float:
-        return value * 2
+    def transform(self, value: int) -> int:
+        return value + 10
+
+
+class Baz(Node):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    def transform(self, value: int) -> int:
+        return value - 5
+
+
+custom_node_map: dict[str, type[Node]] = {"foo": Foo, "bar": Bar, "baz": Baz}
 
 
 def test_single_node():
-    dag = FunctionDAG.from_string("foo")
+    dag = FunctionDAG.from_string(
+        "foo",
+        custom_node_map=custom_node_map,
+    )
     assert isinstance(dag, FunctionDAG)
 
     # Create expected instance
@@ -32,7 +45,10 @@ def test_single_node():
 
 
 def test_multiple_nodes():
-    dag = FunctionDAG.from_string("foo >> bar >> baz")
+    dag = FunctionDAG.from_string(
+        "foo >> bar >> baz",
+        custom_node_map=custom_node_map,
+    )
     assert isinstance(dag, FunctionDAG)
 
     node3 = AnnotatedNode(
@@ -48,9 +64,17 @@ def test_multiple_nodes():
 
     assert dag.nodes == (node1, node2, node3)
 
+    result = dag.transform(42)
+    expected_result = 1769
+
+    assert expected_result == result
+
 
 def test_multiple_nodes_of_same_type():
-    dag = FunctionDAG.from_string("foo >> foo >> foo")
+    dag = FunctionDAG.from_string(
+        "foo >> foo >> foo",
+        custom_node_map=custom_node_map,
+    )
     assert isinstance(dag, FunctionDAG)
 
     node3 = AnnotatedNode(
@@ -68,34 +92,30 @@ def test_multiple_nodes_of_same_type():
 
 
 def test_from_invalid_string():
-    result = FunctionDAG.from_string("foo >> invalid >> baz")
+    result = FunctionDAG.from_string(
+        "foo >> invalid >> baz",
+        custom_node_map=custom_node_map,
+    )
     assert isinstance(result, InvalidGraph)
     assert "Invalid rule found in unvalidated DAG: invalid" in result.message
 
 
 def test_empty_string():
-    result = FunctionDAG.from_string("")
+    result = FunctionDAG.from_string(
+        "",
+        custom_node_map=custom_node_map,
+    )
     assert isinstance(result, InvalidGraph)
     assert "DAG string is empty and therefore invalid" == result.message
 
 
 def test_whitespace_only_string():
-    result = FunctionDAG.from_string("   ")
+    result = FunctionDAG.from_string(
+        "   ",
+        custom_node_map=custom_node_map,
+    )
     assert isinstance(result, InvalidGraph)
     assert "DAG string is empty and therefore invalid" == result.message
-
-
-def test_node_map():
-    assert "foo" in node_map
-    assert "bar" in node_map
-    assert "baz" in node_map
-    assert "qux" in node_map
-    assert "quux" in node_map
-    assert node_map["foo"] is Foo
-    assert node_map["bar"] is Bar
-    assert node_map["baz"] is Baz
-    assert node_map["qux"] is Qux
-    assert node_map["quux"] is Quux
 
 
 def test_cannot_create_abstract_node():

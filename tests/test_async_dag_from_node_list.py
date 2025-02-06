@@ -5,7 +5,6 @@ from pydantic import ConfigDict
 
 from adjustment.async_dag import AsyncAnnotatedNode, AsyncFunctionDAG
 from adjustment.async_node import AsyncNode
-from adjustment.graph import PrevalidatedDAG
 from adjustment.request import ArgumentMappingMetadata, Operation, OperationList
 
 
@@ -41,13 +40,13 @@ mock_node_map = {
 
 
 @pytest.mark.asyncio
-def test_single_node():
+async def test_single_node():
     ops = OperationList(items=[Operation(name="add", rule="add", children=[])])
     mappings: list[ArgumentMappingMetadata] = []
-    prevalidated_dag = PrevalidatedDAG.from_node_list(ops, mappings)
-    assert isinstance(prevalidated_dag, PrevalidatedDAG)
-    dag = AsyncFunctionDAG.from_prevalidated_dag(
-        prevalidated_dag, node_map=mock_node_map
+    dag = AsyncFunctionDAG.from_node_list(
+        dag_op_list=ops,
+        argument_mappings=mappings,
+        custom_node_map=mock_node_map,
     )
     assert isinstance(dag, AsyncFunctionDAG)
 
@@ -57,6 +56,9 @@ def test_single_node():
     )
 
     assert dag.nodes == ((expected_head,),)
+    actual_output = await dag.transform(1)
+    expected_output = 2
+    assert actual_output == expected_output
 
 
 @pytest.mark.asyncio
@@ -72,10 +74,10 @@ async def test_diamond_structure():
     mappings: list[ArgumentMappingMetadata] = [
         ArgumentMappingMetadata(node_name="exp0", inputs=["add1", "mul0"]),
     ]
-    prevalidated_dag = PrevalidatedDAG.from_node_list(ops, mappings)
-    assert isinstance(prevalidated_dag, PrevalidatedDAG)
-    dag = AsyncFunctionDAG.from_prevalidated_dag(
-        prevalidated_dag, node_map=mock_node_map
+    dag = AsyncFunctionDAG.from_node_list(
+        dag_op_list=ops,
+        argument_mappings=mappings,
+        custom_node_map=mock_node_map,
     )
     # The mathematical operation performed is (noting node definitions above):
     # > exp(add(add(1)), multiply(add(1)))
@@ -109,10 +111,10 @@ async def test_split_level_structure():
         ArgumentMappingMetadata(node_name="exp0", inputs=["add0", "mul0"]),
         ArgumentMappingMetadata(node_name="exp1", inputs=["exp0", "add2"]),
     ]
-    prevalidated_dag = PrevalidatedDAG.from_node_list(ops, mappings)
-    assert isinstance(prevalidated_dag, PrevalidatedDAG)
-    dag = AsyncFunctionDAG.from_prevalidated_dag(
-        prevalidated_dag, node_map=mock_node_map
+    dag = AsyncFunctionDAG.from_node_list(
+        dag_op_list=ops,
+        argument_mappings=mappings,
+        custom_node_map=mock_node_map,
     )
     assert isinstance(dag, AsyncFunctionDAG)
     actual_output = await dag.transform(1)

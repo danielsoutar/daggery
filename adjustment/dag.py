@@ -2,7 +2,7 @@ from typing import Any, List, Tuple, Union
 
 from pydantic import BaseModel
 
-from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG, node_map
+from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG
 from .node import Node
 from .request import ArgumentMappingMetadata, OperationList
 from .utils import logger_factory
@@ -22,10 +22,6 @@ class FunctionDAG(BaseModel):
     nodes: Tuple[AnnotatedNode, ...]
 
     @property
-    def head(self) -> AnnotatedNode:
-        return self.nodes[0]
-
-    @property
     def is_sequence(self) -> bool:
         return all(len(node.input_nodes) <= 1 for node in self.nodes)
 
@@ -33,13 +29,11 @@ class FunctionDAG(BaseModel):
     # returning instances of InvalidGraph, making this code exception-free.
     @classmethod
     def from_prevalidated_dag(
-        cls,
-        prevalidated_dag: PrevalidatedDAG,
-        node_map: dict[str, type[Node]] = node_map,
+        cls, prevalidated_dag: PrevalidatedDAG, custom_node_map: dict[str, type[Node]]
     ) -> Union["FunctionDAG", InvalidGraph]:
         node_rules = [node.rule for node in prevalidated_dag.nodes]
         for rule in node_rules:
-            if rule not in node_map.keys():
+            if rule not in custom_node_map.keys():
                 return InvalidGraph(
                     message=f"Invalid rule found in unvalidated DAG: {rule}"
                 )
@@ -52,7 +46,7 @@ class FunctionDAG(BaseModel):
             name = prevalidated_node.name
             child_nodes = [graph_nodes[child] for child in prevalidated_node.children]
 
-            node_class = node_map[prevalidated_node.rule]
+            node_class = custom_node_map[prevalidated_node.rule]
             node = node_class(name=name, children=tuple(child_nodes))
 
             graph_nodes[name] = node
@@ -73,6 +67,7 @@ class FunctionDAG(BaseModel):
         cls,
         dag_op_list: OperationList,
         argument_mappings: List[ArgumentMappingMetadata],
+        custom_node_map: dict[str, type[Node]],
     ) -> Union["FunctionDAG", InvalidGraph]:
         prevalidated_dag = PrevalidatedDAG.from_node_list(
             dag_op_list,
@@ -80,14 +75,19 @@ class FunctionDAG(BaseModel):
         )
         if isinstance(prevalidated_dag, InvalidGraph):
             return prevalidated_dag
-        return cls.from_prevalidated_dag(prevalidated_dag)
+        return cls.from_prevalidated_dag(
+            prevalidated_dag,
+            custom_node_map,
+        )
 
     @classmethod
-    def from_string(cls, dag_string: str) -> Union["FunctionDAG", InvalidGraph]:
+    def from_string(
+        cls, dag_string: str, custom_node_map: dict[str, type[Node]]
+    ) -> Union["FunctionDAG", InvalidGraph]:
         prevalidated_dag = PrevalidatedDAG.from_string(dag_string)
         if isinstance(prevalidated_dag, EmptyDAG):
             return InvalidGraph(message=prevalidated_dag.message)
-        return cls.from_prevalidated_dag(prevalidated_dag)
+        return cls.from_prevalidated_dag(prevalidated_dag, custom_node_map)
 
     def transform(self, value: Any) -> Any:
         context = {"__INPUT__": value}
@@ -116,7 +116,3 @@ class FunctionDAG(BaseModel):
         logger.info(f"Node: {node.naked_node.name}:")
         logger.info(f"  Input(s): {formatted_inputs}")
         logger.info(f"  Output(s): {output_value}")
-
-    # TODO: Fill this in.
-    def serialise(self) -> str:
-        return str(self.head)

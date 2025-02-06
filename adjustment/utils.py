@@ -1,4 +1,6 @@
 import logging
+import time
+from functools import wraps
 
 import colorlog
 
@@ -32,3 +34,47 @@ def logger_factory(name: str) -> logging.Logger:
     logger.addHandler(console_handler)
 
     return logger
+
+
+def logged(logger):
+    def decorator(method):
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            logger.info(f"{self.name}:")
+            logger.info(f"  args: {args}")
+            logger.info(f"  kwargs: {kwargs}")
+            return method(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def timed(logger):
+    def decorator(method):
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            start = time.time()
+            result = method(self, *args, **kwargs)
+            raw_duration = time.time() - start
+            duration = round(raw_duration, ndigits=5)
+            logger.info(f"{self.name} duration: {duration}s")
+            return result
+
+        return wrapper
+
+    return decorator
+
+
+def bypass(error_types, logger):
+    def decorator(method):
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            if len(args) > 0 and any(isinstance(arg, error_types) for arg in args):
+                logger.info(f"{self.name} bypassed.")
+                return args[0]
+            return method(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator

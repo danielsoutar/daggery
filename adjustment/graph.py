@@ -1,29 +1,12 @@
 from collections import defaultdict
-from typing import Dict, List, Union
+from typing import List, Union
 
 from pydantic import BaseModel, model_validator
 
-from .async_node import AsyncFoo, AsyncNode, AsyncPing
-from .node import Bar, Baz, Foo, Node, Quux, Qux
 from .request import ArgumentMappingMetadata, OperationList
 from .utils import logger_factory
 
 logger = logger_factory(__name__)
-
-
-node_map: Dict[str, type[Node]] = {
-    "foo": Foo,
-    "bar": Bar,
-    "baz": Baz,
-    "qux": Qux,
-    "quux": Quux,
-}
-
-
-async_node_map: Dict[str, type[AsyncNode]] = {
-    "foo": AsyncFoo,
-    "ping": AsyncPing,
-}
 
 
 class EmptyDAG(BaseModel):

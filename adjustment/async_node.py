@@ -1,6 +1,6 @@
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Any, Tuple
 
 from pydantic import BaseModel, ConfigDict
 
@@ -14,24 +14,9 @@ class AsyncNode(BaseModel, ABC):
         pass  # Abstract method
 
 
-class AsyncFoo(AsyncNode):
+class AsyncExampleNode(AsyncNode):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    async def transform(self, value: int) -> int:
+    async def transform(self, value: Any) -> Any:
         await asyncio.sleep(1)
-        return value * value
-
-
-class AsyncPing(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    async def transform(self, count: int) -> int:
-        proc = await asyncio.create_subprocess_exec(
-            "ping",
-            "-c",
-            str(count),
-            "8.8.8.8",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT,
-        )
-        return await proc.wait()
+        return value

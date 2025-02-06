@@ -1,12 +1,42 @@
+import asyncio
+from typing import Dict
+
 import pytest
+from pydantic import ConfigDict
 
 from adjustment.async_dag import AsyncAnnotatedNode, AsyncFunctionDAG
-from adjustment.async_node import AsyncFoo, AsyncPing
-from adjustment.graph import AsyncNode, InvalidGraph, async_node_map
+from adjustment.async_node import AsyncNode
+from adjustment.graph import InvalidGraph
 
 
-def test_single_node():
-    dag = AsyncFunctionDAG.from_string("foo")
+class AsyncFoo(AsyncNode):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    async def transform(self, value: int) -> int:
+        await asyncio.sleep(1)
+        return value * value
+
+
+class AsyncPing(AsyncNode):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    async def transform(self, count: int) -> int:
+        proc = await asyncio.create_subprocess_exec(
+            "ping",
+            "-c",
+            str(count),
+            "8.8.8.8",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+        return await proc.wait()
+
+
+mock_node_map: Dict[str, type[AsyncNode]] = {"foo": AsyncFoo, "ping": AsyncPing}
+
+
+async def test_single_node():
+    dag = AsyncFunctionDAG.from_string("foo", custom_node_map=mock_node_map)
     assert isinstance(dag, AsyncFunctionDAG)
 
     # Create expected instance
@@ -17,8 +47,11 @@ def test_single_node():
     assert dag.nodes == ((expected_head,),)
 
 
-def test_multiple_nodes():
-    dag = AsyncFunctionDAG.from_string("foo >> ping")
+async def test_multiple_nodes():
+    dag = AsyncFunctionDAG.from_string(
+        "foo >> ping",
+        custom_node_map=mock_node_map,
+    )
     assert isinstance(dag, AsyncFunctionDAG)
 
     node2 = AsyncAnnotatedNode(
@@ -32,8 +65,11 @@ def test_multiple_nodes():
     assert dag.nodes == ((node1,), (node2,))
 
 
-def test_multiple_nodes_of_same_type():
-    dag = AsyncFunctionDAG.from_string("foo >> foo >> foo")
+async def test_multiple_nodes_of_same_type():
+    dag = AsyncFunctionDAG.from_string(
+        "foo >> foo >> foo",
+        custom_node_map=mock_node_map,
+    )
     assert isinstance(dag, AsyncFunctionDAG)
 
     node3 = AsyncAnnotatedNode(
@@ -52,28 +88,24 @@ def test_multiple_nodes_of_same_type():
 
 
 def test_from_invalid_string():
-    result = AsyncFunctionDAG.from_string("foo >> invalid >> baz")
+    result = AsyncFunctionDAG.from_string(
+        "foo >> invalid >> baz",
+        custom_node_map=mock_node_map,
+    )
     assert isinstance(result, InvalidGraph)
     assert "Invalid rule found in unvalidated DAG: invalid" in result.message
 
 
 def test_empty_string():
-    result = AsyncFunctionDAG.from_string("")
+    result = AsyncFunctionDAG.from_string("", custom_node_map={})
     assert isinstance(result, InvalidGraph)
     assert "DAG string is empty and therefore invalid" == result.message
 
 
 def test_whitespace_only_string():
-    result = AsyncFunctionDAG.from_string("   ")
+    result = AsyncFunctionDAG.from_string("   ", custom_node_map={})
     assert isinstance(result, InvalidGraph)
     assert "DAG string is empty and therefore invalid" == result.message
-
-
-def test_async_node_map():
-    assert "foo" in async_node_map
-    assert "ping" in async_node_map
-    assert async_node_map["foo"] is AsyncFoo
-    assert async_node_map["ping"] is AsyncPing
 
 
 def test_cannot_create_abstract_async_node():

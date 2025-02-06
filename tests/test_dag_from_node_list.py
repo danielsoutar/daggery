@@ -24,7 +24,6 @@ class ExpNode(Node):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     def transform(self, base: float, exponent: float) -> float:
-        time.sleep(2)
         return base**exponent
 
 
@@ -38,9 +37,11 @@ mock_node_map = {
 def test_single_node():
     ops = OperationList(items=[Operation(name="add", rule="add", children=[])])
     mappings: list[ArgumentMappingMetadata] = []
-    prevalidated_dag = PrevalidatedDAG.from_node_list(ops, mappings)
-    assert isinstance(prevalidated_dag, PrevalidatedDAG)
-    dag = FunctionDAG.from_prevalidated_dag(prevalidated_dag, node_map=mock_node_map)
+    dag = FunctionDAG.from_node_list(
+        dag_op_list=ops,
+        argument_mappings=mappings,
+        custom_node_map=mock_node_map,
+    )
     assert isinstance(dag, FunctionDAG)
 
     expected_head = AnnotatedNode(
@@ -63,9 +64,11 @@ def test_diamond_structure():
     mappings: list[ArgumentMappingMetadata] = [
         ArgumentMappingMetadata(node_name="exp0", inputs=["add1", "mul0"]),
     ]
-    prevalidated_dag = PrevalidatedDAG.from_node_list(ops, mappings)
-    assert isinstance(prevalidated_dag, PrevalidatedDAG)
-    dag = FunctionDAG.from_prevalidated_dag(prevalidated_dag, node_map=mock_node_map)
+    dag = FunctionDAG.from_node_list(
+        dag_op_list=ops,
+        argument_mappings=mappings,
+        custom_node_map=mock_node_map,
+    )
     # The mathematical operation performed is (noting node definitions above):
     # > exp(add(add(1)), multiply(add(1)))
     # = 81
@@ -99,7 +102,9 @@ def test_split_level_structure():
     ]
     prevalidated_dag = PrevalidatedDAG.from_node_list(ops, mappings)
     assert isinstance(prevalidated_dag, PrevalidatedDAG)
-    dag = FunctionDAG.from_prevalidated_dag(prevalidated_dag, node_map=mock_node_map)
+    dag = FunctionDAG.from_prevalidated_dag(
+        prevalidated_dag, custom_node_map=mock_node_map
+    )
     assert isinstance(dag, FunctionDAG)
     actual_output = dag.transform(1)
     expected_output = (2**4) ** 4
