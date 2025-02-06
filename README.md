@@ -93,17 +93,11 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
 
 ## TODO:
 
-- [X] Enable configuration of `node_map` to `[Async]FunctionDAG`.
-- [X] Add decorators to `Node.transform`.
-    - Demonstrate this via:
-        * `ByPass` decorator with an example error type and logging.
-        * `Timing` decorator with an example timer.
-        * `Log` decorator with an example logger.
-        * `Client` decorator that forwards a (configurable) HTTP client.
-- [X] Investigate graph substitution
-    - One way is have `Node`s implement a `resolve` method. This presumably requires validating.
-    - A far simpler solution is to just create `DAG`s as needed in the relevant `Node`.
-- [] Add unit tests for the above.
+- [ ] Add HTTP client decorator to `Node.transform`.
+- [ ] Confirm graph substitution works with nested DAGs inside Operations.
+- [ ] Add examples.
+- [ ] Add unit tests for the above.
+- [ ] Migrate to `uv`.
 
 ## Usage
 
