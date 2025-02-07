@@ -3,9 +3,9 @@ import asyncio
 import pytest
 from pydantic import ConfigDict
 
-from adjustment.async_dag import AsyncAnnotatedNode, AsyncFunctionDAG
-from adjustment.async_node import AsyncNode
-from adjustment.request import ArgumentMappingMetadata, Operation, OperationList
+from daggery.async_dag import AsyncAnnotatedNode, AsyncFunctionDAG
+from daggery.async_node import AsyncNode
+from daggery.request import ArgumentMappingMetadata, Operation, OperationList
 
 
 class AddAsyncNode(AsyncNode):

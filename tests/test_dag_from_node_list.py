@@ -1,9 +1,9 @@
 from pydantic import ConfigDict
 
-from adjustment.dag import AnnotatedNode, FunctionDAG
-from adjustment.graph import PrevalidatedDAG
-from adjustment.node import Node
-from adjustment.request import ArgumentMappingMetadata, Operation, OperationList
+from daggery.dag import AnnotatedNode, FunctionDAG
+from daggery.graph import PrevalidatedDAG
+from daggery.node import Node
+from daggery.request import ArgumentMappingMetadata, Operation, OperationList
 
 
 class AddNode(Node):

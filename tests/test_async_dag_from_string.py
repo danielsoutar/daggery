@@ -4,9 +4,9 @@ from typing import Dict
 import pytest
 from pydantic import ConfigDict
 
-from adjustment.async_dag import AsyncAnnotatedNode, AsyncFunctionDAG
-from adjustment.async_node import AsyncNode
-from adjustment.graph import InvalidGraph
+from daggery.async_dag import AsyncAnnotatedNode, AsyncFunctionDAG
+from daggery.async_node import AsyncNode
+from daggery.graph import InvalidGraph
 
 
 class AsyncFoo(AsyncNode):

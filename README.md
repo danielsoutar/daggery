@@ -98,17 +98,8 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
 - [ ] Add examples.
 - [ ] Add unit tests for the above.
 - [ ] Tidy up/standardise terminology and add docstrings/doc pages.
+    - [ ] In particular distinguish `Node` vs `transform` vs `Operation`.
 - [ ] Migrate to `uv`.
 - [ ] Showcase to others.
 - [ ] ???
 - [ ] Profit!
-
-## Usage
-
-To run the service locally, run the following command:
-
-```
-poetry run uvicorn adjustment.main:app --reload
-```
-
-The service will listen on http://127.0.0.1:8000/adjustment - the provided client in client.py can be used to test the service.

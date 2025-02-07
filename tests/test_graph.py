@@ -1,10 +1,10 @@
-from adjustment.graph import (
+from daggery.graph import (
     EmptyDAG,
     InvalidGraph,
     PrevalidatedDAG,
     PrevalidatedNode,
 )
-from adjustment.request import ArgumentMappingMetadata, Operation, OperationList
+from daggery.request import ArgumentMappingMetadata, Operation, OperationList
 
 
 def test_prevalidated_dag_from_string_single_node():

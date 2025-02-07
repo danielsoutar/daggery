@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from adjustment.main import AdjustmentRequest, AdjustmentResponse, app
+from daggery.main import AdjustmentRequest, AdjustmentResponse, app
 
 # Create a TestClient instance
 client = TestClient(app)

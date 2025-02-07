@@ -1,8 +1,8 @@
 import pytest
 from pydantic import ConfigDict
 
-from adjustment.dag import AnnotatedNode, FunctionDAG, InvalidGraph
-from adjustment.node import Node
+from daggery.dag import AnnotatedNode, FunctionDAG, InvalidGraph
+from daggery.node import Node
 
 
 class Foo(Node):

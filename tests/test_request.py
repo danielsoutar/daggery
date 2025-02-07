@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from adjustment.request import (
+from daggery.request import (
     AdjustmentRequest,
     ArgumentMappingMetadata,
     Operation,
