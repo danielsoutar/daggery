@@ -13,7 +13,7 @@ class AsyncFoo(AsyncNode):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     async def transform(self, value: int) -> int:
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.1)
         return value * value
 
 

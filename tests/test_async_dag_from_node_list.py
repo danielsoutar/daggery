@@ -12,7 +12,7 @@ class AddAsyncNode(AsyncNode):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     async def transform(self, value: float) -> float:
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.1)
         return value + 1
 
 
@@ -20,7 +20,7 @@ class MultiplyAsyncNode(AsyncNode):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     async def transform(self, value: float) -> float:
-        await asyncio.sleep(2)
+        await asyncio.sleep(0.2)
         return value * 2
 
 
@@ -28,7 +28,7 @@ class ExpAsyncNode(AsyncNode):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     async def transform(self, base: float, exponent: float) -> float:
-        await asyncio.sleep(2)
+        await asyncio.sleep(0.2)
         return base**exponent
 
 
