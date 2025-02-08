@@ -1,8 +1,7 @@
-import asyncio
 from abc import ABC, abstractmethod
-from typing import Any, Tuple
+from typing import Tuple
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 
 class AsyncNode(BaseModel, ABC):
@@ -14,9 +13,12 @@ class AsyncNode(BaseModel, ABC):
         pass  # Abstract method
 
 
-class AsyncExampleNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+# The below example illustrates an important point:
+# Nodes are *immutable*, and this is checked!
 
-    async def transform(self, value: Any) -> Any:
-        await asyncio.sleep(1)
-        return value
+# class AsyncExampleNode(AsyncNode):
+#     model_config = ConfigDict(extra="forbid", frozen=True)
+
+#     async def transform(self, value: Any) -> Any:
+#         await asyncio.sleep(1)
+#         return value

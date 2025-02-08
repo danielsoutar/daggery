@@ -97,14 +97,14 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
 - [X] Confirm graph substitution works with nested DAGs inside Operations.
 - [X] Add examples.
 - [X] Add unit tests for the above.
+- [X] Add `nullable_[async_]dag` and `throwable_[async_]dag` wrappers.
+- [X] Migrate to `uv`.
 - [ ] Tidy up/standardise terminology and add docstrings/doc pages.
     - [ ] `Node` vs `transform` vs `Operation`.
     - [ ] Different types of `Node`s.
     - [ ] `OperationList -> OperationSequence`?
     - [ ] `ArgumentMappingMetadata -> ArgumentMappingSequence`?
     - [ ] `FunctionDAG -> OperationDAG`? `FunctionDAG -> DAG`?
-- [ ] Add `nullable_[async_]dag` and `throwable_[async_]dag` wrappers.
-- [ ] Migrate to `uv`.
 - [ ] Showcase to others.
 - [ ] ???
 - [ ] Profit!
