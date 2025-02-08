@@ -6,8 +6,18 @@
 .env
 .venv/
 
-# Ignore poetry.lock file
+# Ignore uv and poetry lock files generally
 poetry.lock
+uv.lock
 
 # Ignore Visual Studio Code settings directory
 .vscode/
+
+# Ignore the Python version file.
+.python-version
+
+# Ignore coverage-related files/dirs.
+.coverage
+
+# For the time being, ignore the built site from mkdocs.
+site/
