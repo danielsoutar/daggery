@@ -1,14 +1,14 @@
 import asyncio
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 from pydantic import BaseModel, ConfigDict
 
 from .async_node import AsyncNode
 from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG
 from .request import ArgumentMappingMetadata, OperationList
-from .utils import _logger_factory
+from .utils.logging import logger_factory
 
-logger = _logger_factory(__name__)
+logger = logger_factory(__name__)
 
 
 class AsyncDAGNode(BaseModel):
@@ -111,6 +111,38 @@ class AsyncFunctionDAG(BaseModel):
         return cls.from_prevalidated_dag(prevalidated_dag, custom_node_map)
 
     @classmethod
+    def nullable_from_node_list(
+        cls,
+        graph_description: OperationList,
+        argument_mappings: List[ArgumentMappingMetadata],
+        custom_node_map: dict[str, type[AsyncNode]],
+    ) -> Optional["AsyncFunctionDAG"]:
+        dag = cls.from_node_list(
+            graph_description,
+            argument_mappings,
+            custom_node_map,
+        )
+        if isinstance(dag, InvalidGraph):
+            return None
+        return dag
+
+    @classmethod
+    def throwable_from_node_list(
+        cls,
+        graph_description: OperationList,
+        argument_mappings: List[ArgumentMappingMetadata],
+        custom_node_map: dict[str, type[AsyncNode]],
+    ) -> "AsyncFunctionDAG":
+        dag = cls.from_node_list(
+            graph_description,
+            argument_mappings,
+            custom_node_map,
+        )
+        if isinstance(dag, InvalidGraph):
+            raise Exception(dag.message)
+        return dag
+
+    @classmethod
     def from_string(
         cls,
         graph_description: str,
@@ -120,6 +152,28 @@ class AsyncFunctionDAG(BaseModel):
         if isinstance(prevalidated_dag, EmptyDAG):
             return InvalidGraph(message=prevalidated_dag.message)
         return cls.from_prevalidated_dag(prevalidated_dag, custom_node_map)
+
+    @classmethod
+    def nullable_from_string(
+        cls,
+        graph_description: str,
+        custom_node_map: dict[str, type[AsyncNode]],
+    ) -> Optional["AsyncFunctionDAG"]:
+        dag = cls.from_string(graph_description, custom_node_map)
+        if isinstance(dag, InvalidGraph):
+            return None
+        return dag
+
+    @classmethod
+    def throwable_from_string(
+        cls,
+        graph_description: str,
+        custom_node_map: dict[str, type[AsyncNode]],
+    ) -> "AsyncFunctionDAG":
+        dag = cls.from_string(graph_description, custom_node_map)
+        if isinstance(dag, InvalidGraph):
+            raise Exception(dag.message)
+        return dag
 
     async def transform(self, value: Any) -> Any:
         context = {"__INPUT__": value}

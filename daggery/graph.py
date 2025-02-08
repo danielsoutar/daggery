@@ -4,9 +4,9 @@ from typing import List, Union
 from pydantic import BaseModel, model_validator
 
 from .request import ArgumentMappingMetadata, OperationList
-from .utils import _logger_factory
+from .utils.logging import logger_factory
 
-logger = _logger_factory(__name__)
+logger = logger_factory(__name__)
 
 
 class EmptyDAG(BaseModel):
