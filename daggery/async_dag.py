@@ -1,7 +1,7 @@
 import asyncio
 from typing import Any, List, Tuple, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from .async_node import AsyncNode
 from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG
@@ -11,7 +11,9 @@ from .utils import _logger_factory
 logger = _logger_factory(__name__)
 
 
-class AsyncAnnotatedNode(BaseModel):
+class AsyncDAGNode(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     naked_node: AsyncNode
     input_nodes: Tuple[str, ...]
 
@@ -20,7 +22,9 @@ class AsyncAnnotatedNode(BaseModel):
 
 
 class AsyncFunctionDAG(BaseModel):
-    nodes: Tuple[Tuple[AsyncAnnotatedNode, ...], ...]
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    nodes: Tuple[Tuple[AsyncDAGNode, ...], ...]
 
     @property
     def is_sequence(self) -> bool:
@@ -46,8 +50,8 @@ class AsyncFunctionDAG(BaseModel):
                 )
 
         graph_nodes: dict[str, AsyncNode] = {}
-        current_batch: list[AsyncAnnotatedNode] = []
-        ordered_nodes: list[tuple[AsyncAnnotatedNode, ...]] = []
+        current_batch: list[AsyncDAGNode] = []
+        ordered_nodes: list[tuple[AsyncDAGNode, ...]] = []
 
         # Creating immutable nodes back-to-front guarantees an immutable DAG.
         # When building the graph, we keep track of all nodes in the same
@@ -70,7 +74,7 @@ class AsyncFunctionDAG(BaseModel):
             # We have a special case for the root node, enabling a standard
             # fetching of inputs in the transform.
             input_nodes = tuple(prevalidated_node.input_nodes) or ("__INPUT__",)
-            annotated_node = AsyncAnnotatedNode(
+            annotated_node = AsyncDAGNode(
                 naked_node=node,
                 input_nodes=input_nodes,
             )
@@ -138,7 +142,7 @@ class AsyncFunctionDAG(BaseModel):
 
     def _pretty_log_node(
         self,
-        node: AsyncAnnotatedNode,
+        node: AsyncDAGNode,
         input_values: tuple[Any, ...],
         output_value: Any,
     ) -> None:

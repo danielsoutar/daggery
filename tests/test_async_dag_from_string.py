@@ -4,7 +4,7 @@ from typing import Dict
 import pytest
 from pydantic import ConfigDict
 
-from daggery.async_dag import AsyncAnnotatedNode, AsyncFunctionDAG
+from daggery.async_dag import AsyncDAGNode, AsyncFunctionDAG
 from daggery.async_node import AsyncNode
 from daggery.graph import InvalidGraph
 
@@ -40,7 +40,7 @@ async def test_single_node():
     assert isinstance(dag, AsyncFunctionDAG)
 
     # Create expected instance
-    expected_head = AsyncAnnotatedNode(
+    expected_head = AsyncDAGNode(
         naked_node=AsyncFoo(name="foo0", children=()),
         input_nodes=("__INPUT__",),
     )
@@ -54,10 +54,10 @@ async def test_multiple_nodes():
     )
     assert isinstance(dag, AsyncFunctionDAG)
 
-    node2 = AsyncAnnotatedNode(
+    node2 = AsyncDAGNode(
         naked_node=AsyncPing(name="ping0", children=()), input_nodes=("foo0",)
     )
-    node1 = AsyncAnnotatedNode(
+    node1 = AsyncDAGNode(
         naked_node=AsyncFoo(name="foo0", children=(node2.naked_node,)),
         input_nodes=("__INPUT__",),
     )
@@ -72,14 +72,14 @@ async def test_multiple_nodes_of_same_type():
     )
     assert isinstance(dag, AsyncFunctionDAG)
 
-    node3 = AsyncAnnotatedNode(
+    node3 = AsyncDAGNode(
         naked_node=AsyncFoo(name="foo2", children=()), input_nodes=("foo1",)
     )
-    node2 = AsyncAnnotatedNode(
+    node2 = AsyncDAGNode(
         naked_node=AsyncFoo(name="foo1", children=(node3.naked_node,)),
         input_nodes=("foo0",),
     )
-    node1 = AsyncAnnotatedNode(
+    node1 = AsyncDAGNode(
         naked_node=AsyncFoo(name="foo0", children=(node2.naked_node,)),
         input_nodes=("__INPUT__",),
     )

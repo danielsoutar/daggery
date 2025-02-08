@@ -3,7 +3,7 @@ import asyncio
 import pytest
 from pydantic import ConfigDict
 
-from daggery.async_dag import AsyncAnnotatedNode, AsyncFunctionDAG
+from daggery.async_dag import AsyncDAGNode, AsyncFunctionDAG
 from daggery.async_node import AsyncNode
 from daggery.request import ArgumentMappingMetadata, Operation, OperationList
 
@@ -50,7 +50,7 @@ async def test_single_node():
     )
     assert isinstance(dag, AsyncFunctionDAG)
 
-    expected_head = AsyncAnnotatedNode(
+    expected_head = AsyncDAGNode(
         naked_node=AddAsyncNode(name="add", children=()),
         input_nodes=("__INPUT__",),
     )

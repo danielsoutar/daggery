@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ConfigDict
 
-from daggery.dag import AnnotatedNode, FunctionDAG, InvalidGraph
+from daggery.dag import DAGNode, FunctionDAG, InvalidGraph
 from daggery.node import Node
 
 
@@ -37,7 +37,7 @@ def test_single_node():
     assert isinstance(dag, FunctionDAG)
 
     # Create expected instance
-    expected_head = AnnotatedNode(
+    expected_head = DAGNode(
         naked_node=Foo(name="foo0", children=()),
         input_nodes=("__INPUT__",),
     )
@@ -51,13 +51,11 @@ def test_multiple_nodes():
     )
     assert isinstance(dag, FunctionDAG)
 
-    node3 = AnnotatedNode(
-        naked_node=Baz(name="baz0", children=()), input_nodes=("bar0",)
-    )
-    node2 = AnnotatedNode(
+    node3 = DAGNode(naked_node=Baz(name="baz0", children=()), input_nodes=("bar0",))
+    node2 = DAGNode(
         naked_node=Bar(name="bar0", children=(node3.naked_node,)), input_nodes=("foo0",)
     )
-    node1 = AnnotatedNode(
+    node1 = DAGNode(
         naked_node=Foo(name="foo0", children=(node2.naked_node,)),
         input_nodes=("__INPUT__",),
     )
@@ -77,13 +75,11 @@ def test_multiple_nodes_of_same_type():
     )
     assert isinstance(dag, FunctionDAG)
 
-    node3 = AnnotatedNode(
-        naked_node=Foo(name="foo2", children=()), input_nodes=("foo1",)
-    )
-    node2 = AnnotatedNode(
+    node3 = DAGNode(naked_node=Foo(name="foo2", children=()), input_nodes=("foo1",))
+    node2 = DAGNode(
         naked_node=Foo(name="foo1", children=(node3.naked_node,)), input_nodes=("foo0",)
     )
-    node1 = AnnotatedNode(
+    node1 = DAGNode(
         naked_node=Foo(name="foo0", children=(node2.naked_node,)),
         input_nodes=("__INPUT__",),
     )

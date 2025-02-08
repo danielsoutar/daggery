@@ -1,6 +1,6 @@
 from typing import Any, List, Tuple, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG
 from .node import Node
@@ -10,7 +10,9 @@ from .utils import _logger_factory
 logger = _logger_factory(__name__)
 
 
-class AnnotatedNode(BaseModel):
+class DAGNode(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
     naked_node: Node
     input_nodes: Tuple[str, ...]
 
@@ -19,7 +21,9 @@ class AnnotatedNode(BaseModel):
 
 
 class FunctionDAG(BaseModel):
-    nodes: Tuple[AnnotatedNode, ...]
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    nodes: Tuple[DAGNode, ...]
 
     @property
     def is_sequence(self) -> bool:
@@ -39,7 +43,7 @@ class FunctionDAG(BaseModel):
                 )
 
         graph_nodes: dict[str, Node] = {}
-        ordered_nodes: list[AnnotatedNode] = []
+        ordered_nodes: list[DAGNode] = []
 
         # Creating immutable nodes back-to-front guarantees an immutable DAG.
         for prevalidated_node in reversed(prevalidated_dag.nodes):
@@ -54,7 +58,7 @@ class FunctionDAG(BaseModel):
             # fetching of inputs in the transform.
             input_nodes = tuple(prevalidated_node.input_nodes) or ("__INPUT__",)
             ordered_nodes.append(
-                AnnotatedNode(
+                DAGNode(
                     naked_node=node,
                     input_nodes=input_nodes,
                 )
@@ -103,7 +107,7 @@ class FunctionDAG(BaseModel):
 
     def _pretty_log_node(
         self,
-        node: AnnotatedNode,
+        node: DAGNode,
         input_values: tuple[Any, ...],
         output_value: Any,
     ) -> None:

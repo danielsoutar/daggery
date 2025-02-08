@@ -1,6 +1,6 @@
 from pydantic import ConfigDict
 
-from daggery.dag import AnnotatedNode, FunctionDAG
+from daggery.dag import DAGNode, FunctionDAG
 from daggery.graph import PrevalidatedDAG
 from daggery.node import Node
 from daggery.request import ArgumentMappingMetadata, Operation, OperationList
@@ -44,7 +44,7 @@ def test_single_node():
     )
     assert isinstance(dag, FunctionDAG)
 
-    expected_head = AnnotatedNode(
+    expected_head = DAGNode(
         naked_node=AddNode(name="add", children=()),
         input_nodes=("__INPUT__",),
     )

@@ -71,7 +71,7 @@ This library adheres to the following mantras:
 
 ### Latest and greatest developer tools used (correctly) wherever possible
 
-`uv`, `mypy`, `ruff`, and `pytest-xdist` are all examples. Warnings are fixed immediately.
+`uv`, `mypy`, and `ruff` are all examples. Warnings are fixed immediately.
 
 ### Everything is a value, including errors - code should be exception-free
 
@@ -94,11 +94,16 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
 ## TODO:
 
 - [X] Add HTTP client decorator to `Node.transform`.
-- [ ] Confirm graph substitution works with nested DAGs inside Operations.
-- [ ] Add examples.
-- [ ] Add unit tests for the above.
+- [X] Confirm graph substitution works with nested DAGs inside Operations.
+- [X] Add examples.
+- [X] Add unit tests for the above.
 - [ ] Tidy up/standardise terminology and add docstrings/doc pages.
-    - [ ] In particular distinguish `Node` vs `transform` vs `Operation`.
+    - [ ] `Node` vs `transform` vs `Operation`.
+    - [ ] Different types of `Node`s.
+    - [ ] `OperationList -> OperationSequence`?
+    - [ ] `ArgumentMappingMetadata -> ArgumentMappingSequence`?
+    - [ ] `FunctionDAG -> OperationDAG`? `FunctionDAG -> DAG`?
+- [ ] Add `nullable_[async_]dag` and `throwable_[async_]dag` wrappers.
 - [ ] Migrate to `uv`.
 - [ ] Showcase to others.
 - [ ] ???
