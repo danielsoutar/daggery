@@ -1,7 +1,7 @@
 import asyncio
 from typing import Any, List, Optional, Tuple, Union
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from .async_node import AsyncNode
 from .description import ArgumentMappingMetadata, OperationList
@@ -11,9 +11,7 @@ from .utils.logging import logger_factory
 logger = logger_factory(__name__)
 
 
-class AsyncDAGNode(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
+class AsyncDAGNode(BaseModel, frozen=True):
     naked_node: AsyncNode
     input_nodes: Tuple[str, ...]
 
@@ -21,9 +19,7 @@ class AsyncDAGNode(BaseModel):
         return await self.naked_node.transform(*args)
 
 
-class AsyncFunctionDAG(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
+class AsyncFunctionDAG(BaseModel, frozen=True):
     nodes: Tuple[Tuple[AsyncDAGNode, ...], ...]
 
     @property

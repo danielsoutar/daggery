@@ -1,6 +1,6 @@
 from typing import Any, List, Optional, Tuple, Union
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from .description import ArgumentMappingMetadata, OperationList
 from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG
@@ -10,9 +10,7 @@ from .utils.logging import logger_factory
 logger = logger_factory(__name__)
 
 
-class DAGNode(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
+class DAGNode(BaseModel, frozen=True):
     naked_node: Node
     input_nodes: Tuple[str, ...]
 
@@ -20,9 +18,7 @@ class DAGNode(BaseModel):
         return self.naked_node.transform(*args)
 
 
-class FunctionDAG(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
+class FunctionDAG(BaseModel, frozen=True):
     nodes: Tuple[DAGNode, ...]
 
     @property
