@@ -2,9 +2,9 @@ from typing import Any, List, Optional, Tuple, Union
 
 from pydantic import BaseModel, ConfigDict
 
+from .description import ArgumentMappingMetadata, OperationList
 from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG
 from .node import Node
-from .request import ArgumentMappingMetadata, OperationList
 from .utils.logging import logger_factory
 
 logger = logger_factory(__name__)

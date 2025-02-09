@@ -1,9 +1,9 @@
 from pydantic import ConfigDict
 
 from daggery.dag import FunctionDAG
+from daggery.description import ArgumentMappingMetadata, Operation, OperationList
 from daggery.graph import InvalidGraph
 from daggery.node import Node
-from daggery.request import ArgumentMappingMetadata, Operation, OperationList
 
 
 class FooHeadInternal(Node):

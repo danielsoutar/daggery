@@ -6,8 +6,8 @@ from pydantic import ConfigDict
 from daggery.async_dag import AsyncFunctionDAG
 from daggery.async_node import AsyncNode
 from daggery.dag import FunctionDAG
+from daggery.description import Operation, OperationList
 from daggery.node import Node
-from daggery.request import Operation, OperationList
 
 
 class Foo(Node):

@@ -21,3 +21,6 @@ uv.lock
 
 # For the time being, ignore the built site from mkdocs.
 site/
+
+# windsurf rules
+.windsurfrules

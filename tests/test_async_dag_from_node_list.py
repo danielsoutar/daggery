@@ -5,7 +5,7 @@ from pydantic import ConfigDict
 
 from daggery.async_dag import AsyncDAGNode, AsyncFunctionDAG
 from daggery.async_node import AsyncNode
-from daggery.request import ArgumentMappingMetadata, Operation, OperationList
+from daggery.description import ArgumentMappingMetadata, Operation, OperationList
 
 
 class AddAsyncNode(AsyncNode):

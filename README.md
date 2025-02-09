@@ -99,7 +99,8 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
 - [X] Add unit tests for the above.
 - [X] Add `nullable_[async_]dag` and `throwable_[async_]dag` wrappers.
 - [X] Migrate to `uv`.
-- [ ] Tidy up/standardise terminology and add docstrings/doc pages.
+- [~] Add docstrings/doc pages
+- [ ] Tidy up/standardise terminology.
     - [ ] `Node` vs `transform` vs `Operation`.
     - [ ] Different types of `Node`s.
     - [ ] `OperationList -> OperationSequence`?

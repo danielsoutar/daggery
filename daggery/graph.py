@@ -3,7 +3,7 @@ from typing import List, Union
 
 from pydantic import BaseModel, model_validator
 
-from .request import ArgumentMappingMetadata, OperationList
+from .description import ArgumentMappingMetadata, OperationList
 from .utils.logging import logger_factory
 
 logger = logger_factory(__name__)

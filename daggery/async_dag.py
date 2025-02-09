@@ -4,8 +4,8 @@ from typing import Any, List, Optional, Tuple, Union
 from pydantic import BaseModel, ConfigDict
 
 from .async_node import AsyncNode
+from .description import ArgumentMappingMetadata, OperationList
 from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG
-from .request import ArgumentMappingMetadata, OperationList
 from .utils.logging import logger_factory
 
 logger = logger_factory(__name__)
