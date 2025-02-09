@@ -2,48 +2,37 @@ import asyncio
 import math
 
 import pytest
-from pydantic import ConfigDict
 
 from daggery.async_dag import AsyncFunctionDAG
 from daggery.async_node import AsyncNode
 from daggery.description import ArgumentMappingMetadata, Operation, OperationList
 
 
-class AddAsyncNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class AddAsyncNode(AsyncNode, frozen=True):
     async def transform(self, value: float) -> float:
         await asyncio.sleep(0.05)
         return value + 1
 
 
-class MultiplyAsyncNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class MultiplyAsyncNode(AsyncNode, frozen=True):
     async def transform(self, value: float) -> float:
         await asyncio.sleep(0.1)
         return value * 2
 
 
-class ExpAsyncNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class ExpAsyncNode(AsyncNode, frozen=True):
     async def transform(self, base: float, exponent: float) -> float:
         await asyncio.sleep(0.1)
         return base**exponent
 
 
-class SineAsyncNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class SineAsyncNode(AsyncNode, frozen=True):
     async def transform(self, value: float) -> float:
         await asyncio.sleep(0.05)
         return math.sin(value)
 
 
-class MaxAsyncNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class MaxAsyncNode(AsyncNode, frozen=True):
     # Handily, nodes support arbitrarily-sized arguments. And as
     # it turns out, type hinting supports variadic single-type
     # arguments too!
@@ -52,9 +41,7 @@ class MaxAsyncNode(AsyncNode):
         return max(args)
 
 
-class SumAsyncNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class SumAsyncNode(AsyncNode, frozen=True):
     # Handily, nodes support arbitrarily-sized arguments. And as
     # it turns out, type hinting supports variadic single-type
     # arguments too!
@@ -63,44 +50,34 @@ class SumAsyncNode(AsyncNode):
         return sum(args)
 
 
-class MutableHeadNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class MutableHeadNode(AsyncNode, frozen=True):
     async def transform(self, value: list) -> list:
         await asyncio.sleep(0.05)
         return value
 
 
-class MutableANode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class MutableANode(AsyncNode, frozen=True):
     async def transform(self, value: list) -> list:
         await asyncio.sleep(0.01)
         value.append("A")
         return value
 
 
-class MutableBNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class MutableBNode(AsyncNode, frozen=True):
     async def transform(self, value: list) -> list:
         await asyncio.sleep(0.03)
         value.append("B")
         return value
 
 
-class MutableCNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class MutableCNode(AsyncNode, frozen=True):
     async def transform(self, value: list) -> list:
         await asyncio.sleep(0.05)
         value.append("C")
         return value
 
 
-class MutableTailNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class MutableTailNode(AsyncNode, frozen=True):
     async def transform(self, *lists: list) -> list:
         await asyncio.sleep(0.05)
         return [v for sublist in lists for v in sublist]

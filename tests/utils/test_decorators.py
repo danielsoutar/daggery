@@ -13,9 +13,7 @@ class MyCustomErrorType(BaseModel):
     error_message: str
 
 
-class ServiceNode(Node):
-    model_config = ConfigDict(frozen=True)
-
+class ServiceNode(Node, frozen=True):
     @http_client("http://example.com")
     @bypass(MyCustomErrorType, logger_factory("service"))
     def transform(self, value: int, client: Callable) -> int:
@@ -34,9 +32,7 @@ def test_logged():
         mock_info = MagicMock()
         mock_logger.info = mock_info
 
-        class LoggedNode(Node):
-            model_config = ConfigDict(frozen=True)
-
+        class LoggedNode(Node, frozen=True):
             @logged(mock_logger)
             def transform(self, value: int) -> int:
                 return value * 2
@@ -64,9 +60,7 @@ def test_timed():
         mock_info = MagicMock()
         mock_logger.info = mock_info
 
-        class TimedNode(Node):
-            model_config = ConfigDict(frozen=True)
-
+        class TimedNode(Node, frozen=True):
             @timed(mock_logger)
             def transform(self, value: int) -> int:
                 return value + 3

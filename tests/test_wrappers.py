@@ -1,7 +1,6 @@
 import asyncio
 
 import pytest
-from pydantic import ConfigDict
 
 from daggery.async_dag import AsyncFunctionDAG
 from daggery.async_node import AsyncNode
@@ -10,16 +9,12 @@ from daggery.description import Operation, OperationList
 from daggery.node import Node
 
 
-class Foo(Node):
-    model_config = ConfigDict(frozen=True)
-
+class Foo(Node, frozen=True):
     def transform(self, value: int) -> int:
         return value * value
 
 
-class AsyncFoo(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class AsyncFoo(AsyncNode, frozen=True):
     async def transform(self, value: int) -> int:
         await asyncio.sleep(0.1)
         return value * value

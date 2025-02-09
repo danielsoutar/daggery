@@ -12,13 +12,13 @@ The two types currently exposed are:
 A `FunctionDAG` represents a graph of functions, while an `AsyncFunctionDAG` represents a graph of async functions (wow!). Both can take in a graph description via a string encoding a linear sequence of operations, using the following format in the example below:
 
 ```python
-class Foo(Node):
+class Foo(Node, frozen=True):
     def transform(self, value: int) -> int: return value * value
 
-class Bar(Node):
+class Bar(Node, frozen=True):
     def transform(self, value: int) -> int: return value + 10
 
-class Baz(Node):
+class Baz(Node, frozen=True):
     def transform(self, value: int) -> int: return value - 5
 
 custom_node_map = {"foo": Foo, "bar": Bar, "baz": Baz}

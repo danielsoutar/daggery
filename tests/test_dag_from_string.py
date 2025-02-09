@@ -5,23 +5,17 @@ from daggery.dag import DAGNode, FunctionDAG, InvalidGraph
 from daggery.node import Node
 
 
-class Foo(Node):
-    model_config = ConfigDict(frozen=True)
-
+class Foo(Node, frozen=True):
     def transform(self, value: int) -> int:
         return value * value
 
 
-class Bar(Node):
-    model_config = ConfigDict(frozen=True)
-
+class Bar(Node, frozen=True):
     def transform(self, value: int) -> int:
         return value + 10
 
 
-class Baz(Node):
-    model_config = ConfigDict(frozen=True)
-
+class Baz(Node, frozen=True):
     def transform(self, value: int) -> int:
         return value - 5
 

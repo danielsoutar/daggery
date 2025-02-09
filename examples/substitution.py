@@ -1,42 +1,30 @@
-from pydantic import ConfigDict
-
 from daggery.dag import FunctionDAG
 from daggery.description import ArgumentMappingMetadata, Operation, OperationList
 from daggery.graph import InvalidGraph
 from daggery.node import Node
 
 
-class FooHeadInternal(Node):
-    model_config = ConfigDict(frozen=True)
-
+class FooHeadInternal(Node, frozen=True):
     def transform(self, value):
         return value
 
 
-class FooQuxInternal(Node):
-    model_config = ConfigDict(frozen=True)
-
+class FooQuxInternal(Node, frozen=True):
     def transform(self, value):
         return value
 
 
-class FooQuuxInternal(Node):
-    model_config = ConfigDict(frozen=True)
-
+class FooQuuxInternal(Node, frozen=True):
     def transform(self, value):
         return value
 
 
-class FooCombinedInternal(Node):
-    model_config = ConfigDict(frozen=True)
-
+class FooCombinedInternal(Node, frozen=True):
     def transform(self, a, b):
         return a * b
 
 
-class FooExternal(Node):
-    model_config = ConfigDict(frozen=True)
-
+class FooExternal(Node, frozen=True):
     def transform(self, value):
         names = ["foo_internal", "qux", "quux", "combined"]
         rules = ["foo_internal", "qux", "quux", "combined"]
@@ -64,16 +52,12 @@ class FooExternal(Node):
             return dag.transform(value)
 
 
-class BarExternal(Node):
-    model_config = ConfigDict(frozen=True)
-
+class BarExternal(Node, frozen=True):
     def transform(self, value):
         return value + 10
 
 
-class BazExternal(Node):
-    model_config = ConfigDict(frozen=True)
-
+class BazExternal(Node, frozen=True):
     def transform(self, value):
         return value - 5
 

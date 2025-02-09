@@ -4,7 +4,7 @@ from typing import Tuple
 from pydantic import BaseModel
 
 
-class Node(BaseModel, ABC):
+class Node(BaseModel, ABC, frozen=True):
     name: str
     children: Tuple["Node", ...] = ()
 
@@ -16,8 +16,6 @@ class Node(BaseModel, ABC):
 # The below example illustrates an important point:
 # Nodes are *immutable*, and this is checked!
 
-# class ExampleNode(Node):
-#     model_config = ConfigDict(frozen=True)
-
+# class ExampleNode(Node, frozen=True):
 #     def transform(self, value: Any) -> Any:
 #         return value

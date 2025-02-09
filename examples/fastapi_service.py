@@ -14,45 +14,35 @@ logger = logger_factory(__name__)
 app = FastAPI()
 
 
-class Foo(Node):
-    model_config = ConfigDict(frozen=True)
-
+class Foo(Node, frozen=True):
     @timed(logger)
     @logged(logger)
     def transform(self, value: int) -> int:
         return value * value
 
 
-class Bar(Node):
-    model_config = ConfigDict(frozen=True)
-
+class Bar(Node, frozen=True):
     @timed(logger)
     @logged(logger)
     def transform(self, value: int) -> int:
         return value + 10
 
 
-class Baz(Node):
-    model_config = ConfigDict(frozen=True)
-
+class Baz(Node, frozen=True):
     @timed(logger)
     @logged(logger)
     def transform(self, value: int) -> int:
         return value - 5
 
 
-class Qux(Node):
-    model_config = ConfigDict(frozen=True)
-
+class Qux(Node, frozen=True):
     @timed(logger)
     @logged(logger)
     def transform(self, value: int) -> int:
         return value * 2
 
 
-class Quux(Node):
-    model_config = ConfigDict(frozen=True)
-
+class Quux(Node, frozen=True):
     @timed(logger)
     @logged(logger)
     def transform(self, value: int) -> int:

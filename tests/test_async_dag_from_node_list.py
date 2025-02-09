@@ -1,32 +1,25 @@
 import asyncio
 
 import pytest
-from pydantic import ConfigDict
 
 from daggery.async_dag import AsyncDAGNode, AsyncFunctionDAG
 from daggery.async_node import AsyncNode
 from daggery.description import ArgumentMappingMetadata, Operation, OperationList
 
 
-class AddAsyncNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class AddAsyncNode(AsyncNode, frozen=True):
     async def transform(self, value: float) -> float:
         await asyncio.sleep(0.1)
         return value + 1
 
 
-class MultiplyAsyncNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class MultiplyAsyncNode(AsyncNode, frozen=True):
     async def transform(self, value: float) -> float:
         await asyncio.sleep(0.2)
         return value * 2
 
 
-class ExpAsyncNode(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class ExpAsyncNode(AsyncNode, frozen=True):
     async def transform(self, base: float, exponent: float) -> float:
         await asyncio.sleep(0.2)
         return base**exponent

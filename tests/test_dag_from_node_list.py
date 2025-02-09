@@ -1,28 +1,20 @@
-from pydantic import ConfigDict
-
 from daggery.dag import DAGNode, FunctionDAG
 from daggery.description import ArgumentMappingMetadata, Operation, OperationList
 from daggery.graph import PrevalidatedDAG
 from daggery.node import Node
 
 
-class AddNode(Node):
-    model_config = ConfigDict(frozen=True)
-
+class AddNode(Node, frozen=True):
     def transform(self, value: float) -> float:
         return value + 1
 
 
-class MultiplyNode(Node):
-    model_config = ConfigDict(frozen=True)
-
+class MultiplyNode(Node, frozen=True):
     def transform(self, value: float) -> float:
         return value * 2
 
 
-class ExpNode(Node):
-    model_config = ConfigDict(frozen=True)
-
+class ExpNode(Node, frozen=True):
     def transform(self, base: float, exponent: float) -> float:
         return base**exponent
 

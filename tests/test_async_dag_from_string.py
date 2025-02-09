@@ -2,24 +2,19 @@ import asyncio
 from typing import Dict
 
 import pytest
-from pydantic import ConfigDict
 
 from daggery.async_dag import AsyncDAGNode, AsyncFunctionDAG
 from daggery.async_node import AsyncNode
 from daggery.graph import InvalidGraph
 
 
-class AsyncFoo(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class AsyncFoo(AsyncNode, frozen=True):
     async def transform(self, value: int) -> int:
         await asyncio.sleep(0.1)
         return value * value
 
 
-class AsyncPing(AsyncNode):
-    model_config = ConfigDict(frozen=True)
-
+class AsyncPing(AsyncNode, frozen=True):
     async def transform(self, count: int) -> int:
         proc = await asyncio.create_subprocess_exec(
             "ping",
