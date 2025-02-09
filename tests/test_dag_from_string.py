@@ -6,21 +6,21 @@ from daggery.node import Node
 
 
 class Foo(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     def transform(self, value: int) -> int:
         return value * value
 
 
 class Bar(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     def transform(self, value: int) -> int:
         return value + 10
 
 
 class Baz(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     def transform(self, value: int) -> int:
         return value - 5

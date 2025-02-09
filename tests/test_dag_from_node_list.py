@@ -7,21 +7,21 @@ from daggery.node import Node
 
 
 class AddNode(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     def transform(self, value: float) -> float:
         return value + 1
 
 
 class MultiplyNode(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     def transform(self, value: float) -> float:
         return value * 2
 
 
 class ExpNode(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     def transform(self, base: float, exponent: float) -> float:
         return base**exponent

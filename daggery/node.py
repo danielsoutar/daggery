@@ -17,7 +17,7 @@ class Node(BaseModel, ABC):
 # Nodes are *immutable*, and this is checked!
 
 # class ExampleNode(Node):
-#     model_config = ConfigDict(extra="forbid", frozen=True)
+#     model_config = ConfigDict(frozen=True)
 
 #     def transform(self, value: Any) -> Any:
 #         return value

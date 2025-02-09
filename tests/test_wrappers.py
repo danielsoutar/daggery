@@ -11,14 +11,14 @@ from daggery.node import Node
 
 
 class Foo(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     def transform(self, value: int) -> int:
         return value * value
 
 
 class AsyncFoo(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, value: int) -> int:
         await asyncio.sleep(0.1)

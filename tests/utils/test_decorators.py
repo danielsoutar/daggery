@@ -14,7 +14,7 @@ class MyCustomErrorType(BaseModel):
 
 
 class ServiceNode(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     @http_client("http://example.com")
     @bypass(MyCustomErrorType, logger_factory("service"))
@@ -35,7 +35,7 @@ def test_logged():
         mock_logger.info = mock_info
 
         class LoggedNode(Node):
-            model_config = ConfigDict(extra="forbid", frozen=True)
+            model_config = ConfigDict(frozen=True)
 
             @logged(mock_logger)
             def transform(self, value: int) -> int:
@@ -65,7 +65,7 @@ def test_timed():
         mock_logger.info = mock_info
 
         class TimedNode(Node):
-            model_config = ConfigDict(extra="forbid", frozen=True)
+            model_config = ConfigDict(frozen=True)
 
             @timed(mock_logger)
             def transform(self, value: int) -> int:

@@ -10,7 +10,7 @@ from daggery.graph import InvalidGraph
 
 
 class AsyncFoo(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, value: int) -> int:
         await asyncio.sleep(0.1)
@@ -18,7 +18,7 @@ class AsyncFoo(AsyncNode):
 
 
 class AsyncPing(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, count: int) -> int:
         proc = await asyncio.create_subprocess_exec(

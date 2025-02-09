@@ -17,7 +17,7 @@ class AsyncNode(BaseModel, ABC):
 # Nodes are *immutable*, and this is checked!
 
 # class AsyncExampleNode(AsyncNode):
-#     model_config = ConfigDict(extra="forbid", frozen=True)
+#     model_config = ConfigDict(frozen=True)
 
 #     async def transform(self, value: Any) -> Any:
 #         await asyncio.sleep(1)

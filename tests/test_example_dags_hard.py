@@ -10,7 +10,7 @@ from daggery.description import ArgumentMappingMetadata, Operation, OperationLis
 
 
 class AddAsyncNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, value: float) -> float:
         await asyncio.sleep(0.05)
@@ -18,7 +18,7 @@ class AddAsyncNode(AsyncNode):
 
 
 class MultiplyAsyncNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, value: float) -> float:
         await asyncio.sleep(0.1)
@@ -26,7 +26,7 @@ class MultiplyAsyncNode(AsyncNode):
 
 
 class ExpAsyncNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, base: float, exponent: float) -> float:
         await asyncio.sleep(0.1)
@@ -34,7 +34,7 @@ class ExpAsyncNode(AsyncNode):
 
 
 class SineAsyncNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, value: float) -> float:
         await asyncio.sleep(0.05)
@@ -42,7 +42,7 @@ class SineAsyncNode(AsyncNode):
 
 
 class MaxAsyncNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     # Handily, nodes support arbitrarily-sized arguments. And as
     # it turns out, type hinting supports variadic single-type
@@ -53,7 +53,7 @@ class MaxAsyncNode(AsyncNode):
 
 
 class SumAsyncNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     # Handily, nodes support arbitrarily-sized arguments. And as
     # it turns out, type hinting supports variadic single-type
@@ -64,7 +64,7 @@ class SumAsyncNode(AsyncNode):
 
 
 class MutableHeadNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, value: list) -> list:
         await asyncio.sleep(0.05)
@@ -72,7 +72,7 @@ class MutableHeadNode(AsyncNode):
 
 
 class MutableANode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, value: list) -> list:
         await asyncio.sleep(0.01)
@@ -81,7 +81,7 @@ class MutableANode(AsyncNode):
 
 
 class MutableBNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, value: list) -> list:
         await asyncio.sleep(0.03)
@@ -90,7 +90,7 @@ class MutableBNode(AsyncNode):
 
 
 class MutableCNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, value: list) -> list:
         await asyncio.sleep(0.05)
@@ -99,7 +99,7 @@ class MutableCNode(AsyncNode):
 
 
 class MutableTailNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, *lists: list) -> list:
         await asyncio.sleep(0.05)

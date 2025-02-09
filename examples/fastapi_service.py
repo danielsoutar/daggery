@@ -15,7 +15,7 @@ app = FastAPI()
 
 
 class Foo(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     @timed(logger)
     @logged(logger)
@@ -24,7 +24,7 @@ class Foo(Node):
 
 
 class Bar(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     @timed(logger)
     @logged(logger)
@@ -33,7 +33,7 @@ class Bar(Node):
 
 
 class Baz(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     @timed(logger)
     @logged(logger)
@@ -42,7 +42,7 @@ class Baz(Node):
 
 
 class Qux(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     @timed(logger)
     @logged(logger)
@@ -51,7 +51,7 @@ class Qux(Node):
 
 
 class Quux(Node):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     @timed(logger)
     @logged(logger)

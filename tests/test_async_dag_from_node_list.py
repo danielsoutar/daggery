@@ -9,7 +9,7 @@ from daggery.description import ArgumentMappingMetadata, Operation, OperationLis
 
 
 class AddAsyncNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, value: float) -> float:
         await asyncio.sleep(0.1)
@@ -17,7 +17,7 @@ class AddAsyncNode(AsyncNode):
 
 
 class MultiplyAsyncNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, value: float) -> float:
         await asyncio.sleep(0.2)
@@ -25,7 +25,7 @@ class MultiplyAsyncNode(AsyncNode):
 
 
 class ExpAsyncNode(AsyncNode):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     async def transform(self, base: float, exponent: float) -> float:
         await asyncio.sleep(0.2)

@@ -48,7 +48,7 @@ class OperationList(BaseModel):
     form.
     """
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     items: List[Operation]
 

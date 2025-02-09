@@ -12,7 +12,7 @@ logger = logger_factory(__name__)
 
 
 class AsyncDAGNode(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     naked_node: AsyncNode
     input_nodes: Tuple[str, ...]
@@ -22,7 +22,7 @@ class AsyncDAGNode(BaseModel):
 
 
 class AsyncFunctionDAG(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     nodes: Tuple[Tuple[AsyncDAGNode, ...], ...]
 

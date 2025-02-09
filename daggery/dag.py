@@ -11,7 +11,7 @@ logger = logger_factory(__name__)
 
 
 class DAGNode(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     naked_node: Node
     input_nodes: Tuple[str, ...]
@@ -21,7 +21,7 @@ class DAGNode(BaseModel):
 
 
 class FunctionDAG(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     nodes: Tuple[DAGNode, ...]
 
