@@ -32,6 +32,9 @@ class ArgumentMappingMetadata(BaseModel):
     # ["name_of_node_with_base", "name_of_node_with_exponent"].
     inputs: List[str] = []
     # Nodes always have one output, so no need to name them.
+    # TODO: Consider 'assigning' outputs as opposed to the current approach of
+    # always broadcasting. Decide at what level of abstraction this would be
+    # useful.
 
     @model_validator(mode="after")
     def name_not_empty(self):

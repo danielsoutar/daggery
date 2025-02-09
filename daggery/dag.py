@@ -48,6 +48,10 @@ class FunctionDAG(BaseModel, frozen=True):
 
             node_class = custom_node_map[prevalidated_node.rule]
             node = node_class(name=name, children=tuple(child_nodes))
+            if not node.model_config.get("frozen", False):
+                return InvalidGraph(
+                    message=f"Mutable node found in DAG ({node}). This is not supported."
+                )
 
             graph_nodes[name] = node
             # We have a special case for the root node, enabling a standard

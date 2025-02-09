@@ -65,6 +65,10 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
 
             node_class = custom_node_map[prevalidated_node.rule]
             node = node_class(name=name, children=tuple(child_nodes))
+            if not node.model_config.get("frozen", False):
+                return InvalidGraph(
+                    message=f"Mutable node found in DAG ({node}). This is not supported."
+                )
 
             graph_nodes[name] = node
             # We have a special case for the root node, enabling a standard
@@ -171,6 +175,10 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
             raise Exception(dag.message)
         return dag
 
+    # TODO: Consider implementing threadpool policy along with tests/verification.
+    # The current policy of batching nodes into a single task is not
+    # optimal, but is provably correct and serves as a baseline.
+    # This would likely include changing `from_prevalidated_dag` as well.
     async def transform(self, value: Any) -> Any:
         context = {"__INPUT__": value}
         # The nodes are topologically sorted. As it turns out, this is also
@@ -189,6 +197,9 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
                 self._pretty_log_node(node, input_vs, output_v)
                 context[node.naked_node.name] = output_v
         return context[node.naked_node.name]
+
+    # TODO: Consider adding a `reorder` method returning a new DAG with
+    # optimal batching.
 
     def _pretty_log_node(
         self,
