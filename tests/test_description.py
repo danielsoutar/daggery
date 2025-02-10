@@ -42,6 +42,19 @@ def test_operation_sequence_not_empty():
         OperationSequence(ops=())
 
 
+def test_operation_sequence_has_duplicates():
+    with pytest.raises(
+        ValidationError,
+        match="An OperationSequence cannot contain duplicate operations: ",
+    ):
+        OperationSequence(
+            ops=(
+                Operation(name="foo", op_name="foo"),
+                Operation(name="foo", op_name="foo"),
+            )
+        )
+
+
 def test_operation_list_with_ops():
     op_list = OperationSequence(ops=(Operation(name="foo", op_name="foo"),))
     assert len(op_list.ops) == 1

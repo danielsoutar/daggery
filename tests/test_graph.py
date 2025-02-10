@@ -91,19 +91,6 @@ def test_prevalidated_dag_from_dag_description_multiple_nodes_multiple_tails():
     assert isinstance(actual, InvalidGraph)
 
 
-# TODO: Move to test_description since duplicate ops are not allowed.
-# def test_prevalidated_dag_from_dag_description_multiple_nodes_duplicate_names():
-#     operations = OperationSequence(
-#         ops=(
-#             Operation(name="foo", op_name="foo", children=("foo",)),
-#             Operation(name="foo", op_name="foo", children=("bar",)),
-#             Operation(name="bar", op_name="bar"),
-#         )
-#     )
-#     actual = PrevalidatedDAG.from_dag_description(DAGDescription(operations=operations))
-#     assert isinstance(actual, InvalidGraph)
-
-
 def test_prevalidated_dag_from_dag_description_multiple_nodes_no_mappings_given():
     operations = OperationSequence(
         ops=(

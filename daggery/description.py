@@ -61,7 +61,7 @@ class OperationSequence(BaseModel, frozen=True):
         op_names = [op.name for op in self.ops]
         if len(self.ops) != len(set(op_names)):
             raise ValueError(
-                f"OperationSequence cannot contain duplicate operations: {self.ops}"
+                f"An OperationSequence cannot contain duplicate operations: {self.ops}"
             )
         return self
 
