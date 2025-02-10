@@ -1,64 +1,53 @@
-import asyncio
-
-import pytest
-
-from daggery.async_dag import AsyncDAGNode, AsyncFunctionDAG
-from daggery.async_node import AsyncNode
+from daggery.dag import DAGNode, FunctionDAG
 from daggery.description import (
     ArgumentMapping,
     DAGDescription,
     Operation,
     OperationSequence,
 )
+from daggery.graph import PrevalidatedDAG
+from daggery.node import Node
 
 
-class AddAsyncNode(AsyncNode, frozen=True):
-    async def transform(self, value: float) -> float:
-        await asyncio.sleep(0.1)
+class AddNode(Node, frozen=True):
+    def transform(self, value: float) -> float:
         return value + 1
 
 
-class MultiplyAsyncNode(AsyncNode, frozen=True):
-    async def transform(self, value: float) -> float:
-        await asyncio.sleep(0.2)
+class MultiplyNode(Node, frozen=True):
+    def transform(self, value: float) -> float:
         return value * 2
 
 
-class ExpAsyncNode(AsyncNode, frozen=True):
-    async def transform(self, base: float, exponent: float) -> float:
-        await asyncio.sleep(0.2)
+class ExpNode(Node, frozen=True):
+    def transform(self, base: float, exponent: float) -> float:
         return base**exponent
 
 
 mock_op_node_map = {
-    "add": AddAsyncNode,
-    "mul": MultiplyAsyncNode,
-    "exp": ExpAsyncNode,
+    "add": AddNode,
+    "mul": MultiplyNode,
+    "exp": ExpNode,
 }
 
 
-@pytest.mark.asyncio
-async def test_single_node():
+def test_single_node():
     ops = OperationSequence(ops=(Operation(name="add", op_name="add"),))
-    dag = AsyncFunctionDAG.from_node_list(
+    dag = FunctionDAG.from_dag_description(
         dag_description=DAGDescription(operations=ops),
         custom_op_node_map=mock_op_node_map,
     )
-    assert isinstance(dag, AsyncFunctionDAG)
+    assert isinstance(dag, FunctionDAG)
 
-    expected_head = AsyncDAGNode(
-        naked_node=AddAsyncNode(name="add", children=()),
+    expected_head = DAGNode(
+        naked_node=AddNode(name="add", children=()),
         input_nodes=("__INPUT__",),
     )
 
-    assert dag.nodes == ((expected_head,),)
-    actual_output = await dag.transform(1)
-    expected_output = 2
-    assert actual_output == expected_output
+    assert dag.nodes == (expected_head,)
 
 
-@pytest.mark.asyncio
-async def test_diamond_structure():
+def test_diamond_structure():
     ops = OperationSequence(
         ops=(
             Operation(name="add0", op_name="add", children=("add1", "mul0")),
@@ -68,21 +57,20 @@ async def test_diamond_structure():
         )
     )
     mappings = (ArgumentMapping(op_name="exp0", inputs=("add1", "mul0")),)
-    dag = AsyncFunctionDAG.from_node_list(
-        dag_description=DAGDescription(operations=ops, argument_mappings=mappings),
+    dag = FunctionDAG.from_dag_description(
+        DAGDescription(operations=ops, argument_mappings=mappings),
         custom_op_node_map=mock_op_node_map,
     )
     # The mathematical operation performed is (noting node definitions above):
     # > exp(add(add(1)), multiply(add(1)))
     # = 81
-    assert isinstance(dag, AsyncFunctionDAG)
-    actual_output = await dag.transform(1)
+    assert isinstance(dag, FunctionDAG)
+    actual_output = dag.transform(1)
     expected_output = 81
     assert actual_output == expected_output
 
 
-@pytest.mark.asyncio
-async def test_split_level_structure():
+def test_split_level_structure():
     ops = OperationSequence(
         ops=(
             Operation(name="add0", op_name="add", children=("exp0", "mul0", "add1")),
@@ -104,11 +92,14 @@ async def test_split_level_structure():
         ArgumentMapping(op_name="exp0", inputs=("add0", "mul0")),
         ArgumentMapping(op_name="exp1", inputs=("exp0", "add2")),
     )
-    dag = AsyncFunctionDAG.from_node_list(
-        dag_description=DAGDescription(operations=ops, argument_mappings=mappings),
-        custom_op_node_map=mock_op_node_map,
+    prevalidated_dag = PrevalidatedDAG.from_dag_description(
+        DAGDescription(operations=ops, argument_mappings=mappings)
     )
-    assert isinstance(dag, AsyncFunctionDAG)
-    actual_output = await dag.transform(1)
+    assert isinstance(prevalidated_dag, PrevalidatedDAG)
+    dag = FunctionDAG.from_prevalidated_dag(
+        prevalidated_dag, custom_op_node_map=mock_op_node_map
+    )
+    assert isinstance(dag, FunctionDAG)
+    actual_output = dag.transform(1)
     expected_output = (2**4) ** 4
     assert actual_output == expected_output

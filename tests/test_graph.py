@@ -51,7 +51,7 @@ def test_prevalidated_dag_from_string_empty_string():
     assert PrevalidatedDAG.from_string(dag_string) == expected_output
 
 
-def test_prevalidated_dag_from_node_list_single_node():
+def test_prevalidated_dag_from_dag_description_single_node():
     operations = OperationSequence(ops=(Operation(name="foo", op_name="foo"),))
     expected_output = PrevalidatedDAG(
         nodes=[
@@ -59,12 +59,12 @@ def test_prevalidated_dag_from_node_list_single_node():
         ]
     )
     assert (
-        PrevalidatedDAG.from_node_list(DAGDescription(operations=operations))
+        PrevalidatedDAG.from_dag_description(DAGDescription(operations=operations))
         == expected_output
     )
 
 
-def test_prevalidated_dag_from_node_list_multiple_nodes_multiple_heads():
+def test_prevalidated_dag_from_dag_description_multiple_nodes_multiple_heads():
     operations = OperationSequence(
         ops=(
             Operation(name="foo", op_name="foo", children=("baz",)),
@@ -73,13 +73,13 @@ def test_prevalidated_dag_from_node_list_multiple_nodes_multiple_heads():
         )
     )
     mappings = (ArgumentMapping(op_name="baz", inputs=("foo", "bar")),)
-    actual = PrevalidatedDAG.from_node_list(
+    actual = PrevalidatedDAG.from_dag_description(
         DAGDescription(operations=operations, argument_mappings=mappings)
     )
     assert isinstance(actual, InvalidGraph)
 
 
-def test_prevalidated_dag_from_node_list_multiple_nodes_multiple_tails():
+def test_prevalidated_dag_from_dag_description_multiple_nodes_multiple_tails():
     operations = OperationSequence(
         ops=(
             Operation(name="foo", op_name="foo", children=("bar", "baz")),
@@ -87,12 +87,12 @@ def test_prevalidated_dag_from_node_list_multiple_nodes_multiple_tails():
             Operation(name="baz", op_name="baz"),
         )
     )
-    actual = PrevalidatedDAG.from_node_list(DAGDescription(operations=operations))
+    actual = PrevalidatedDAG.from_dag_description(DAGDescription(operations=operations))
     assert isinstance(actual, InvalidGraph)
 
 
 # TODO: Move to test_description since duplicate ops are not allowed.
-# def test_prevalidated_dag_from_node_list_multiple_nodes_duplicate_names():
+# def test_prevalidated_dag_from_dag_description_multiple_nodes_duplicate_names():
 #     operations = OperationSequence(
 #         ops=(
 #             Operation(name="foo", op_name="foo", children=("foo",)),
@@ -100,11 +100,11 @@ def test_prevalidated_dag_from_node_list_multiple_nodes_multiple_tails():
 #             Operation(name="bar", op_name="bar"),
 #         )
 #     )
-#     actual = PrevalidatedDAG.from_node_list(DAGDescription(operations=operations))
+#     actual = PrevalidatedDAG.from_dag_description(DAGDescription(operations=operations))
 #     assert isinstance(actual, InvalidGraph)
 
 
-def test_prevalidated_dag_from_node_list_multiple_nodes_no_mappings_given():
+def test_prevalidated_dag_from_dag_description_multiple_nodes_no_mappings_given():
     operations = OperationSequence(
         ops=(
             Operation(name="foo", op_name="foo", children=("bar",)),
@@ -135,12 +135,12 @@ def test_prevalidated_dag_from_node_list_multiple_nodes_no_mappings_given():
         ]
     )
     assert (
-        PrevalidatedDAG.from_node_list(DAGDescription(operations=operations))
+        PrevalidatedDAG.from_dag_description(DAGDescription(operations=operations))
         == expected_output
     )
 
 
-def test_prevalidated_dag_from_node_list_multiple_nodes_invalid_mappings_given():
+def test_prevalidated_dag_from_dag_description_multiple_nodes_invalid_mappings_given():
     operations = OperationSequence(
         ops=(
             Operation(name="foo", op_name="foo", children=("bar",)),
@@ -151,13 +151,13 @@ def test_prevalidated_dag_from_node_list_multiple_nodes_invalid_mappings_given()
     # Although specifying redundant mappings isn't an error, specifying
     # invalid mappings is. So we catch that case here.
     mappings = (ArgumentMapping(op_name="bar"),)
-    actual = PrevalidatedDAG.from_node_list(
+    actual = PrevalidatedDAG.from_dag_description(
         DAGDescription(operations=operations, argument_mappings=mappings)
     )
     assert isinstance(actual, InvalidGraph)
 
 
-def test_prevalidated_dag_from_node_list_multiple_nodes_some_mappings_given():
+def test_prevalidated_dag_from_dag_description_multiple_nodes_some_mappings_given():
     operations = OperationSequence(
         ops=(
             Operation(name="foo", op_name="foo", children=("bar",)),
@@ -193,14 +193,14 @@ def test_prevalidated_dag_from_node_list_multiple_nodes_some_mappings_given():
         ]
     )
     assert (
-        PrevalidatedDAG.from_node_list(
+        PrevalidatedDAG.from_dag_description(
             DAGDescription(operations=operations, argument_mappings=mappings)
         )
         == expected_output
     )
 
 
-def test_prevalidated_dag_from_node_list_multiple_nodes_all_mappings_given():
+def test_prevalidated_dag_from_dag_description_multiple_nodes_all_mappings_given():
     operations = OperationSequence(
         ops=(
             Operation(name="foo", op_name="foo", children=("bar",)),
@@ -237,14 +237,14 @@ def test_prevalidated_dag_from_node_list_multiple_nodes_all_mappings_given():
         ]
     )
     assert (
-        PrevalidatedDAG.from_node_list(
+        PrevalidatedDAG.from_dag_description(
             DAGDescription(operations=operations, argument_mappings=mappings)
         )
         == expected_output
     )
 
 
-def test_prevalidated_dag_from_node_list_diamond_structure_no_mappings_given():
+def test_prevalidated_dag_from_dag_description_diamond_structure_no_mappings_given():
     operations = OperationSequence(
         ops=(
             Operation(name="foo", op_name="foo", children=("bar", "baz")),
@@ -253,11 +253,11 @@ def test_prevalidated_dag_from_node_list_diamond_structure_no_mappings_given():
             Operation(name="qux", op_name="qux"),
         )
     )
-    actual = PrevalidatedDAG.from_node_list(DAGDescription(operations=operations))
+    actual = PrevalidatedDAG.from_dag_description(DAGDescription(operations=operations))
     assert isinstance(actual, InvalidGraph)
 
 
-def test_prevalidated_dag_from_node_list_diamond_structure_all_mappings_given():
+def test_prevalidated_dag_from_dag_description_diamond_structure_all_mappings_given():
     operations = OperationSequence(
         ops=(
             Operation(name="foo", op_name="foo", children=("bar", "baz")),
@@ -298,13 +298,13 @@ def test_prevalidated_dag_from_node_list_diamond_structure_all_mappings_given():
             ),
         ]
     )
-    actual = PrevalidatedDAG.from_node_list(
+    actual = PrevalidatedDAG.from_dag_description(
         DAGDescription(operations=operations, argument_mappings=mappings)
     )
     assert expected_output == actual
 
 
-def test_prevalidated_dag_from_node_list_diamond_structure_only_required_mappings_given():
+def test_prevalidated_dag_from_dag_description_diamond_structure_only_required_mappings_given():
     operations = OperationSequence(
         ops=(
             Operation(name="foo", op_name="foo", children=("bar", "baz")),
@@ -340,7 +340,7 @@ def test_prevalidated_dag_from_node_list_diamond_structure_only_required_mapping
             ),
         ]
     )
-    actual = PrevalidatedDAG.from_node_list(
+    actual = PrevalidatedDAG.from_dag_description(
         DAGDescription(operations=operations, argument_mappings=mappings)
     )
     assert expected_output == actual

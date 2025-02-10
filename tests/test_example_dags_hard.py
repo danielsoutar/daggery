@@ -149,7 +149,7 @@ async def test_free_node_insertable_anywhere():
                 ),
             ),
         )
-        dag = AsyncFunctionDAG.from_node_list(
+        dag = AsyncFunctionDAG.from_dag_description(
             DAGDescription(operations=ops, argument_mappings=mappings),
             custom_op_node_map=mock_op_node_map,
         )
@@ -187,7 +187,7 @@ async def test_transitive_closure_graph():
         ArgumentMapping(op_name=name, inputs=tuple(parents))
         for name, parents in zip(names, all_parents)
     )
-    dag = AsyncFunctionDAG.from_node_list(
+    dag = AsyncFunctionDAG.from_dag_description(
         DAGDescription(operations=ops, argument_mappings=mappings),
         custom_op_node_map=mock_op_node_map,
     )
@@ -226,7 +226,7 @@ async def test_mutable_arguments_are_dangerous():
     mappings = (
         ArgumentMapping(op_name="mut_tail", inputs=("mut_a", "mut_b", "mut_c")),
     )
-    dag = AsyncFunctionDAG.from_node_list(
+    dag = AsyncFunctionDAG.from_dag_description(
         DAGDescription(operations=ops, argument_mappings=mappings),
         custom_op_node_map=mock_op_node_map,
     )

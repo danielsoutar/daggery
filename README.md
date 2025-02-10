@@ -61,7 +61,7 @@ mappings = (
     ),
 )
 
-dag = AsyncFunctionDAG.from_node_list(
+dag = AsyncFunctionDAG.from_dag_description(
     DAGDescription(operations=ops, argument_mappings=mappings),
     custom_op_node_map,
 )

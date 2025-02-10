@@ -28,7 +28,7 @@ class PrevalidatedNode(BaseModel):
     input_nodes: List[str] = []
 
     @model_validator(mode="after")
-    def name_and_rule_not_empty(self):
+    def name_and_node_name_not_empty(self):
         if self.name == "":
             raise ValueError("PrevalidatedNode must have a name")
         if self.node_name == "":
@@ -104,7 +104,7 @@ class PrevalidatedDAG(BaseModel):
         return cls(nodes=nodes + [last_node])
 
     @classmethod
-    def from_node_list(
+    def from_dag_description(
         cls, dag_description: DAGDescription
     ) -> Union["PrevalidatedDAG", InvalidGraph]:
         argument_mappings = {

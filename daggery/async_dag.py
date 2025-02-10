@@ -96,34 +96,34 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
         return cls(nodes=tuple(reversed(ordered_nodes)))
 
     @classmethod
-    def from_node_list(
+    def from_dag_description(
         cls,
         dag_description: DAGDescription,
         custom_op_node_map: dict[str, type[AsyncNode]],
     ) -> Union["AsyncFunctionDAG", InvalidGraph]:
-        prevalidated_dag = PrevalidatedDAG.from_node_list(dag_description)
+        prevalidated_dag = PrevalidatedDAG.from_dag_description(dag_description)
         if isinstance(prevalidated_dag, InvalidGraph):
             return prevalidated_dag
         return cls.from_prevalidated_dag(prevalidated_dag, custom_op_node_map)
 
     @classmethod
-    def nullable_from_node_list(
+    def nullable_from_dag_description(
         cls,
         dag_description: DAGDescription,
         custom_op_node_map: dict[str, type[AsyncNode]],
     ) -> Optional["AsyncFunctionDAG"]:
-        dag = cls.from_node_list(dag_description, custom_op_node_map)
+        dag = cls.from_dag_description(dag_description, custom_op_node_map)
         if isinstance(dag, InvalidGraph):
             return None
         return dag
 
     @classmethod
-    def throwable_from_node_list(
+    def throwable_from_dag_description(
         cls,
         dag_description: DAGDescription,
         custom_op_node_map: dict[str, type[AsyncNode]],
     ) -> "AsyncFunctionDAG":
-        dag = cls.from_node_list(dag_description, custom_op_node_map)
+        dag = cls.from_dag_description(dag_description, custom_op_node_map)
         if isinstance(dag, InvalidGraph):
             raise Exception(dag.message)
         return dag

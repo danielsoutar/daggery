@@ -39,7 +39,7 @@ class FooExternal(Node, frozen=True):
             ("combined",),
             (),
         ]
-        dag = FunctionDAG.from_node_list(
+        dag = FunctionDAG.from_dag_description(
             dag_description=DAGDescription(
                 operations=OperationSequence(
                     ops=tuple(
@@ -91,7 +91,7 @@ def construct_dag() -> FunctionDAG | None:
     useful in those scenarios. Daggery DAGs do not rely on state, so these graphs,
     nested or otherwise, are also thread-safe.
     """
-    dag = FunctionDAG.from_node_list(
+    dag = FunctionDAG.from_dag_description(
         dag_description=DAGDescription(
             operations=OperationSequence(
                 ops=(

@@ -67,7 +67,7 @@ def construct_graph(
             custom_op_node_map=custom_op_node_map,
         )
     else:
-        return FunctionDAG.from_node_list(
+        return FunctionDAG.from_dag_description(
             dag_description=adjustment_request.operations,
             argument_mappings=adjustment_request.argument_mappings,
             custom_op_node_map=custom_op_node_map,
