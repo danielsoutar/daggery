@@ -1,6 +1,6 @@
 import pytest
 
-from daggery.dag import DAGNode, FunctionDAG, InvalidGraph
+from daggery.dag import DAGNode, FunctionDAG, InvalidDAG
 from daggery.node import Node
 
 
@@ -85,9 +85,9 @@ def test_from_invalid_string():
         "foo >> invalid >> baz",
         custom_op_node_map=custom_op_node_map,
     )
-    assert isinstance(result, InvalidGraph)
+    assert isinstance(result, InvalidDAG)
     assert (
-        "Invalid internal node_name found in prevalidated DAG: invalid"
+        "Invalid internal node class found in prevalidated DAG: invalid"
         in result.message
     )
 
@@ -97,7 +97,7 @@ def test_empty_string():
         "",
         custom_op_node_map=custom_op_node_map,
     )
-    assert isinstance(result, InvalidGraph)
+    assert isinstance(result, InvalidDAG)
     assert "DAG string is empty and therefore invalid" == result.message
 
 
@@ -106,7 +106,7 @@ def test_whitespace_only_string():
         "   ",
         custom_op_node_map=custom_op_node_map,
     )
-    assert isinstance(result, InvalidGraph)
+    assert isinstance(result, InvalidDAG)
     assert "DAG string is empty and therefore invalid" == result.message
 
 

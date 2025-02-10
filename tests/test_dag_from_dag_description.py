@@ -5,8 +5,8 @@ from daggery.description import (
     Operation,
     OperationSequence,
 )
-from daggery.graph import PrevalidatedDAG
 from daggery.node import Node
+from daggery.prevalidate import PrevalidatedDAG
 
 
 class AddNode(Node, frozen=True):

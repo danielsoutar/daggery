@@ -5,8 +5,8 @@ from daggery.description import (
     Operation,
     OperationSequence,
 )
-from daggery.graph import InvalidGraph
 from daggery.node import Node
+from daggery.prevalidate import InvalidDAG
 
 
 class FooHeadInternal(Node, frozen=True):
@@ -60,7 +60,7 @@ class FooExternal(Node, frozen=True):
                 "combined": FooCombinedInternal,
             },
         )
-        if isinstance(dag, InvalidGraph):
+        if isinstance(dag, InvalidDAG):
             return 0
         else:
             return dag.transform(value)
@@ -109,7 +109,7 @@ def construct_dag() -> FunctionDAG | None:
     )
     # Casting to None allows us to use the walrus operator in calling code.
     # TODO: Consider whether this comparison should be supported in error types.
-    return None if isinstance(dag, InvalidGraph) else dag
+    return None if isinstance(dag, InvalidDAG) else dag
 
 
 def main():

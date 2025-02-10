@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from .async_node import AsyncNode
 from .description import ArgumentMapping, DAGDescription, OperationSequence
-from .graph import EmptyDAG, InvalidGraph, PrevalidatedDAG
+from .prevalidate import EmptyDAG, InvalidDAG, PrevalidatedDAG
 from .utils.logging import logger_factory
 
 logger = logger_factory(__name__)
@@ -31,18 +31,18 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
         )
 
     # We separate the creation of the DAG from the init method since this allows
-    # returning instances of InvalidGraph, making this code exception-free.
+    # returning instances of InvalidDAG, making this code exception-free.
     @classmethod
     def from_prevalidated_dag(
         cls,
         prevalidated_dag: PrevalidatedDAG,
         custom_op_node_map: dict[str, type[AsyncNode]],
-    ) -> Union["AsyncFunctionDAG", InvalidGraph]:
-        node_names = [node.node_name for node in prevalidated_dag.nodes]
-        for name in node_names:
-            if name not in custom_op_node_map.keys():
-                return InvalidGraph(
-                    message=f"Invalid internal node_name found in prevalidated DAG: {name}"
+    ) -> Union["AsyncFunctionDAG", InvalidDAG]:
+        node_classes = [node.node_class for node in prevalidated_dag.nodes]
+        for node_class in node_classes:
+            if node_class not in custom_op_node_map.keys():
+                return InvalidDAG(
+                    message=f"Invalid internal node class found in prevalidated DAG: {node_class}"
                 )
 
         graph_nodes: dict[str, AsyncNode] = {}
@@ -63,10 +63,10 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
             name = prevalidated_node.name
             child_nodes = [graph_nodes[child] for child in prevalidated_node.children]
 
-            node_class = custom_op_node_map[prevalidated_node.node_name]
-            node = node_class(name=name, children=tuple(child_nodes))
+            node_class_constructor = custom_op_node_map[prevalidated_node.node_class]
+            node = node_class_constructor(name=name, children=tuple(child_nodes))
             if not node.model_config.get("frozen", False):
-                return InvalidGraph(
+                return InvalidDAG(
                     message=f"Mutable node found in DAG ({node}). This is not supported."
                 )
 
@@ -100,9 +100,9 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
         cls,
         dag_description: DAGDescription,
         custom_op_node_map: dict[str, type[AsyncNode]],
-    ) -> Union["AsyncFunctionDAG", InvalidGraph]:
+    ) -> Union["AsyncFunctionDAG", InvalidDAG]:
         prevalidated_dag = PrevalidatedDAG.from_dag_description(dag_description)
-        if isinstance(prevalidated_dag, InvalidGraph):
+        if isinstance(prevalidated_dag, InvalidDAG):
             return prevalidated_dag
         return cls.from_prevalidated_dag(prevalidated_dag, custom_op_node_map)
 
@@ -113,7 +113,7 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
         custom_op_node_map: dict[str, type[AsyncNode]],
     ) -> Optional["AsyncFunctionDAG"]:
         dag = cls.from_dag_description(dag_description, custom_op_node_map)
-        if isinstance(dag, InvalidGraph):
+        if isinstance(dag, InvalidDAG):
             return None
         return dag
 
@@ -124,7 +124,7 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
         custom_op_node_map: dict[str, type[AsyncNode]],
     ) -> "AsyncFunctionDAG":
         dag = cls.from_dag_description(dag_description, custom_op_node_map)
-        if isinstance(dag, InvalidGraph):
+        if isinstance(dag, InvalidDAG):
             raise Exception(dag.message)
         return dag
 
@@ -133,10 +133,10 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
         cls,
         dag_description: str,
         custom_op_node_map: dict[str, type[AsyncNode]],
-    ) -> Union["AsyncFunctionDAG", InvalidGraph]:
+    ) -> Union["AsyncFunctionDAG", InvalidDAG]:
         prevalidated_dag = PrevalidatedDAG.from_string(dag_description)
         if isinstance(prevalidated_dag, EmptyDAG):
-            return InvalidGraph(message=prevalidated_dag.message)
+            return InvalidDAG(message=prevalidated_dag.message)
         return cls.from_prevalidated_dag(prevalidated_dag, custom_op_node_map)
 
     @classmethod
@@ -146,7 +146,7 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
         custom_op_node_map: dict[str, type[AsyncNode]],
     ) -> Optional["AsyncFunctionDAG"]:
         dag = cls.from_string(dag_description, custom_op_node_map)
-        if isinstance(dag, InvalidGraph):
+        if isinstance(dag, InvalidDAG):
             return None
         return dag
 
@@ -157,7 +157,7 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
         custom_op_node_map: dict[str, type[AsyncNode]],
     ) -> "AsyncFunctionDAG":
         dag = cls.from_string(dag_description, custom_op_node_map)
-        if isinstance(dag, InvalidGraph):
+        if isinstance(dag, InvalidDAG):
             raise Exception(dag.message)
         return dag
 

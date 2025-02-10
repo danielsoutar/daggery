@@ -1,6 +1,6 @@
 # Daggery
 
-This mini-library exposes a set of types designed for executing graphs of operations. It supports generating synchronous and asynchronous graphs, allows custom rules, and provides wrappers for things like logging and timing.
+This mini-library exposes a set of types designed for executing directed, acyclic graphs (DAGs) of operations. It supports generating synchronous and asynchronous DAGs, allows custom operations, and provides wrappers for things like logging and timing.
 
 ## Exposed types
 
@@ -9,7 +9,7 @@ The two types currently exposed are:
 * `FunctionDAG`
 * `AsyncFunctionDAG`
 
-A `FunctionDAG` represents a graph of functions, while an `AsyncFunctionDAG` represents a graph of async functions (wow!). Both can take in a graph description via a string encoding a linear sequence of operations, using the following format in the example below:
+A `FunctionDAG` represents a DAG of functions, while an `AsyncFunctionDAG` represents a DAG of async functions (wow!). Both can take in a string encoding a linear sequence of operations, using the following format in the example below:
 
 ```python
 # Note that frozen=True is used for all nodes - and is required by Daggery.
@@ -33,7 +33,7 @@ result
 # 1769
 ```
 
-More generally both accept a DAG description, using a topologically-sorted list of desired operations and a list of argument mappings for operations with multiple inputs:
+More generally both accept a DAG description, using a topologically-sorted sequence of desired operations and a sequence of argument mappings for operations with multiple inputs:
 
 ```python
 # Assume corresponding nodes for `add`, `mul` (multiply) and `exp` (exponentiate).
@@ -54,15 +54,12 @@ ops = OperationSequence(
             ),
         )
     )
-# Only need to provide mappings when arguments are ambiguous.
-mappings = (
-    ArgumentMapping(
-        op_name="exp0", inputs=("add1", "mul0")  # first arg comes from `add1`, second from `mul0`.
-    ),
-)
+# Only need to provide mappings when arguments are ambiguous (i.e. >1 input).
+# In this example, the first argument comes from `add1`, the second from `mul0`.
+mapping = ArgumentMapping(op_name="exp0", inputs=("add1", "mul0"))
 
 dag = AsyncFunctionDAG.from_dag_description(
-    DAGDescription(operations=ops, argument_mappings=mappings),
+    DAGDescription(operations=ops, argument_mappings=(mapping,)),
     custom_op_node_map,
 )
 result = await dag.transform(1)
@@ -83,7 +80,7 @@ Daggery code aims to never raise Exceptions, and provides utilities for user-def
 
 ### Immutability is first-class.
 
-This encourages many things like locality, safety, efficiency, and testability. Additionally it also encourages state to be decoupled and encoded explicitly, further aiding these aims.
+This encourages many things like local reasoning, safety, efficiency, and testability. Additionally it also encourages state to be decoupled and encoded explicitly, further aiding these aims.
 
 ### Leverage structure and validated types - the earlier this is done, the greater the benefits.
 
@@ -110,7 +107,7 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
     - [X] `OperationSequence -> OperationSequence`?
     - [X] `ArgumentMapping -> ArgumentMappingSequence`?
     - [X] `FunctionDAG -> OperationDAG`? `FunctionDAG -> DAG`?
-    - [ ] Tidy up graph.py with naming and data structures.
+    - [X] Tidy up graph.py with naming and data structures as well as better validation.
     - [ ] Get the example with a FastAPI service working.
 - [ ] Showcase to others.
 - [ ] ???

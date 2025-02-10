@@ -5,7 +5,7 @@ import pytest
 
 from daggery.async_dag import AsyncDAGNode, AsyncFunctionDAG
 from daggery.async_node import AsyncNode
-from daggery.graph import InvalidGraph
+from daggery.prevalidate import InvalidDAG
 
 
 class AsyncFoo(AsyncNode, frozen=True):
@@ -87,22 +87,22 @@ def test_from_invalid_string():
         "foo >> invalid >> baz",
         custom_op_node_map=mock_op_node_map,
     )
-    assert isinstance(result, InvalidGraph)
+    assert isinstance(result, InvalidDAG)
     assert (
-        "Invalid internal node_name found in prevalidated DAG: invalid"
+        "Invalid internal node class found in prevalidated DAG: invalid"
         in result.message
     )
 
 
 def test_empty_string():
     result = AsyncFunctionDAG.from_string("", custom_op_node_map={})
-    assert isinstance(result, InvalidGraph)
+    assert isinstance(result, InvalidDAG)
     assert "DAG string is empty and therefore invalid" == result.message
 
 
 def test_whitespace_only_string():
     result = AsyncFunctionDAG.from_string("   ", custom_op_node_map={})
-    assert isinstance(result, InvalidGraph)
+    assert isinstance(result, InvalidDAG)
     assert "DAG string is empty and therefore invalid" == result.message
 
 

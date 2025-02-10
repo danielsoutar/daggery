@@ -4,9 +4,9 @@ from daggery.description import (
     Operation,
     OperationSequence,
 )
-from daggery.graph import (
+from daggery.prevalidate import (
     EmptyDAG,
-    InvalidGraph,
+    InvalidDAG,
     PrevalidatedDAG,
     PrevalidatedNode,
 )
@@ -15,7 +15,7 @@ from daggery.graph import (
 def test_prevalidated_dag_from_string_single_node():
     dag_string = "foo"
     expected_output = PrevalidatedDAG(
-        nodes=[PrevalidatedNode(name="foo0", node_name="foo")]
+        nodes=(PrevalidatedNode(name="foo0", node_class="foo"),)
     )
     assert PrevalidatedDAG.from_string(dag_string) == expected_output
 
@@ -23,24 +23,24 @@ def test_prevalidated_dag_from_string_single_node():
 def test_prevalidated_dag_from_string_multiple_nodes():
     dag_string = "foo >> bar >> baz"
     expected_output = PrevalidatedDAG(
-        nodes=[
+        nodes=(
             PrevalidatedNode(
                 name="foo0",
-                node_name="foo",
-                children=["bar0"],
+                node_class="foo",
+                children=("bar0",),
             ),
             PrevalidatedNode(
                 name="bar0",
-                node_name="bar",
-                children=["baz0"],
-                input_nodes=["foo0"],
+                node_class="bar",
+                children=("baz0",),
+                input_nodes=("foo0",),
             ),
             PrevalidatedNode(
                 name="baz0",
-                node_name="baz",
-                input_nodes=["bar0"],
+                node_class="baz",
+                input_nodes=("bar0",),
             ),
-        ]
+        )
     )
     assert PrevalidatedDAG.from_string(dag_string) == expected_output
 
@@ -54,9 +54,7 @@ def test_prevalidated_dag_from_string_empty_string():
 def test_prevalidated_dag_from_dag_description_single_node():
     operations = OperationSequence(ops=(Operation(name="foo", op_name="foo"),))
     expected_output = PrevalidatedDAG(
-        nodes=[
-            PrevalidatedNode(name="foo", node_name="foo"),
-        ]
+        nodes=(PrevalidatedNode(name="foo", node_class="foo"),)
     )
     assert (
         PrevalidatedDAG.from_dag_description(DAGDescription(operations=operations))
@@ -76,7 +74,7 @@ def test_prevalidated_dag_from_dag_description_multiple_nodes_multiple_heads():
     actual = PrevalidatedDAG.from_dag_description(
         DAGDescription(operations=operations, argument_mappings=mappings)
     )
-    assert isinstance(actual, InvalidGraph)
+    assert isinstance(actual, InvalidDAG)
 
 
 def test_prevalidated_dag_from_dag_description_multiple_nodes_multiple_tails():
@@ -88,7 +86,7 @@ def test_prevalidated_dag_from_dag_description_multiple_nodes_multiple_tails():
         )
     )
     actual = PrevalidatedDAG.from_dag_description(DAGDescription(operations=operations))
-    assert isinstance(actual, InvalidGraph)
+    assert isinstance(actual, InvalidDAG)
 
 
 def test_prevalidated_dag_from_dag_description_multiple_nodes_no_mappings_given():
@@ -102,24 +100,24 @@ def test_prevalidated_dag_from_dag_description_multiple_nodes_no_mappings_given(
     # Because we have a linear sequence, mappings are unambigious. So we don't
     # need to specify them.
     expected_output = PrevalidatedDAG(
-        nodes=[
+        nodes=(
             PrevalidatedNode(
                 name="foo",
-                node_name="foo",
-                children=["bar"],
+                node_class="foo",
+                children=("bar",),
             ),
             PrevalidatedNode(
                 name="bar",
-                node_name="bar",
-                children=["baz"],
-                input_nodes=["foo"],
+                node_class="bar",
+                children=("baz",),
+                input_nodes=("foo",),
             ),
             PrevalidatedNode(
                 name="baz",
-                node_name="baz",
-                input_nodes=["bar"],
+                node_class="baz",
+                input_nodes=("bar",),
             ),
-        ]
+        )
     )
     assert (
         PrevalidatedDAG.from_dag_description(DAGDescription(operations=operations))
@@ -141,7 +139,7 @@ def test_prevalidated_dag_from_dag_description_multiple_nodes_invalid_mappings_g
     actual = PrevalidatedDAG.from_dag_description(
         DAGDescription(operations=operations, argument_mappings=mappings)
     )
-    assert isinstance(actual, InvalidGraph)
+    assert isinstance(actual, InvalidDAG)
 
 
 def test_prevalidated_dag_from_dag_description_multiple_nodes_some_mappings_given():
@@ -160,24 +158,24 @@ def test_prevalidated_dag_from_dag_description_multiple_nodes_some_mappings_give
         ArgumentMapping(op_name="baz", inputs=("bar",)),
     )
     expected_output = PrevalidatedDAG(
-        nodes=[
+        nodes=(
             PrevalidatedNode(
                 name="foo",
-                node_name="foo",
-                children=["bar"],
+                node_class="foo",
+                children=("bar",),
             ),
             PrevalidatedNode(
                 name="bar",
-                node_name="bar",
-                children=["baz"],
-                input_nodes=["foo"],
+                node_class="bar",
+                children=("baz",),
+                input_nodes=("foo",),
             ),
             PrevalidatedNode(
                 name="baz",
-                node_name="baz",
-                input_nodes=["bar"],
+                node_class="baz",
+                input_nodes=("bar",),
             ),
-        ]
+        )
     )
     assert (
         PrevalidatedDAG.from_dag_description(
@@ -204,24 +202,24 @@ def test_prevalidated_dag_from_dag_description_multiple_nodes_all_mappings_given
         ArgumentMapping(op_name="baz", inputs=("bar",)),
     )
     expected_output = PrevalidatedDAG(
-        nodes=[
+        nodes=(
             PrevalidatedNode(
                 name="foo",
-                node_name="foo",
-                children=["bar"],
+                node_class="foo",
+                children=("bar",),
             ),
             PrevalidatedNode(
                 name="bar",
-                node_name="bar",
-                children=["baz"],
-                input_nodes=["foo"],
+                node_class="bar",
+                children=("baz",),
+                input_nodes=("foo",),
             ),
             PrevalidatedNode(
                 name="baz",
-                node_name="baz",
-                input_nodes=["bar"],
+                node_class="baz",
+                input_nodes=("bar",),
             ),
-        ]
+        )
     )
     assert (
         PrevalidatedDAG.from_dag_description(
@@ -241,7 +239,7 @@ def test_prevalidated_dag_from_dag_description_diamond_structure_no_mappings_giv
         )
     )
     actual = PrevalidatedDAG.from_dag_description(DAGDescription(operations=operations))
-    assert isinstance(actual, InvalidGraph)
+    assert isinstance(actual, InvalidDAG)
 
 
 def test_prevalidated_dag_from_dag_description_diamond_structure_all_mappings_given():
@@ -260,30 +258,36 @@ def test_prevalidated_dag_from_dag_description_diamond_structure_all_mappings_gi
         ArgumentMapping(op_name="qux", inputs=("bar", "baz")),
     )
     expected_output = PrevalidatedDAG(
-        nodes=[
+        nodes=(
             PrevalidatedNode(
                 name="foo",
-                node_name="foo",
-                children=["bar", "baz"],
+                node_class="foo",
+                children=(
+                    "bar",
+                    "baz",
+                ),
             ),
             PrevalidatedNode(
                 name="bar",
-                node_name="bar",
-                children=["qux"],
-                input_nodes=["foo"],
+                node_class="bar",
+                children=("qux",),
+                input_nodes=("foo",),
             ),
             PrevalidatedNode(
                 name="baz",
-                node_name="baz",
-                children=["qux"],
-                input_nodes=["foo"],
+                node_class="baz",
+                children=("qux",),
+                input_nodes=("foo",),
             ),
             PrevalidatedNode(
                 name="qux",
-                node_name="qux",
-                input_nodes=["bar", "baz"],
+                node_class="qux",
+                input_nodes=(
+                    "bar",
+                    "baz",
+                ),
             ),
-        ]
+        )
     )
     actual = PrevalidatedDAG.from_dag_description(
         DAGDescription(operations=operations, argument_mappings=mappings)
@@ -302,30 +306,36 @@ def test_prevalidated_dag_from_dag_description_diamond_structure_only_required_m
     )
     mappings = (ArgumentMapping(op_name="qux", inputs=("bar", "baz")),)
     expected_output = PrevalidatedDAG(
-        nodes=[
+        nodes=(
             PrevalidatedNode(
                 name="foo",
-                node_name="foo",
-                children=["bar", "baz"],
+                node_class="foo",
+                children=(
+                    "bar",
+                    "baz",
+                ),
             ),
             PrevalidatedNode(
                 name="bar",
-                node_name="bar",
-                children=["qux"],
-                input_nodes=["foo"],
+                node_class="bar",
+                children=("qux",),
+                input_nodes=("foo",),
             ),
             PrevalidatedNode(
                 name="baz",
-                node_name="baz",
-                children=["qux"],
-                input_nodes=["foo"],
+                node_class="baz",
+                children=("qux",),
+                input_nodes=("foo",),
             ),
             PrevalidatedNode(
                 name="qux",
-                node_name="qux",
-                input_nodes=["bar", "baz"],
+                node_class="qux",
+                input_nodes=(
+                    "bar",
+                    "baz",
+                ),
             ),
-        ]
+        )
     )
     actual = PrevalidatedDAG.from_dag_description(
         DAGDescription(operations=operations, argument_mappings=mappings)

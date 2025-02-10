@@ -1,11 +1,10 @@
 from fastapi import FastAPI
-from pydantic import ConfigDict
+from pydantic import BaseModel
 
 from daggery.dag import FunctionDAG
 from daggery.description import DAGDescription
-from daggery.graph import InvalidGraph
 from daggery.node import Node
-from daggery.response import AdjustmentResponse
+from daggery.prevalidate import InvalidDAG
 from daggery.utils.decorators import logged, timed
 from daggery.utils.logging import logger_factory
 
@@ -58,28 +57,37 @@ custom_op_node_map: dict[str, type[Node]] = {
 }
 
 
+# In this example, clients not only provide inputs, but also the desired graph
+# to evaluate.
+class TransformRequest(BaseModel):
+    name: str
+    value: int
+    operations: str | DAGDescription
+
+
+class TransformResponse(BaseModel):
+    message: str
+
+
 def construct_graph(
-    adjustment_request: DAGDescription,
-) -> FunctionDAG | InvalidGraph:
-    if isinstance(adjustment_request.operations, str):
+    transform_request: TransformRequest,
+) -> FunctionDAG | InvalidDAG:
+    if isinstance(transform_request.operations, str):
         return FunctionDAG.from_string(
-            dag_description=adjustment_request.operations,
+            dag_description=transform_request.operations,
             custom_op_node_map=custom_op_node_map,
         )
     else:
         return FunctionDAG.from_dag_description(
-            dag_description=adjustment_request.operations,
-            argument_mappings=adjustment_request.argument_mappings,
+            dag_description=transform_request.operations,
             custom_op_node_map=custom_op_node_map,
         )
 
 
-@app.post("/adjustment", response_model=AdjustmentResponse)
-async def process_adjustment_request(adjustment_request: DAGDescription):
+@app.post("/transform", response_model=TransformResponse)
+async def process_transform_request(transform_request: TransformRequest):
     """
-    Process an DAGDescription.
-
-    This endpoint receives a `DAGDescription`, performs the specified series
+    This endpoint receives a `TransformRequest`, performs the specified series
     of operations, and returns a confirmation message with the result.
 
     ### Request Body
@@ -90,18 +98,18 @@ async def process_adjustment_request(adjustment_request: DAGDescription):
     ### Response
     - message: Confirmation message including the result of the operations.
     """
-    dag = construct_graph(adjustment_request)
+    dag = construct_graph(transform_request)
 
-    if isinstance(dag, InvalidGraph):
+    if isinstance(dag, InvalidDAG):
         logger.error("Failed to create DAG")
-        return AdjustmentResponse(message=f"Failed to create DAG: {dag.message}")
+        return TransformResponse(message=f"Failed to create DAG: {dag.message}")
 
     logger.info("DAG successfully created")
-    result = dag.transform(adjustment_request.value)
-    return AdjustmentResponse(
+    result = dag.transform(transform_request.value)
+    return TransformResponse(
         message=(
-            f"Received DAGDescription with name: {adjustment_request.name} "
-            f"and value: {adjustment_request.value}. "
+            f"Received DAGDescription with name: {transform_request.name} "
+            f"and value: {transform_request.value}. "
             f"Result after transformation: {result}"
         )
     )
