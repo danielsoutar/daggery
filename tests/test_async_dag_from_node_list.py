@@ -30,7 +30,7 @@ class ExpAsyncNode(AsyncNode, frozen=True):
         return base**exponent
 
 
-mock_node_map = {
+mock_op_node_map = {
     "add": AddAsyncNode,
     "mul": MultiplyAsyncNode,
     "exp": ExpAsyncNode,
@@ -42,7 +42,7 @@ async def test_single_node():
     ops = OperationSequence(ops=(Operation(name="add", op_name="add"),))
     dag = AsyncFunctionDAG.from_node_list(
         dag_description=DAGDescription(operations=ops),
-        custom_node_map=mock_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, AsyncFunctionDAG)
 
@@ -70,7 +70,7 @@ async def test_diamond_structure():
     mappings = (ArgumentMapping(op_name="exp0", inputs=("add1", "mul0")),)
     dag = AsyncFunctionDAG.from_node_list(
         dag_description=DAGDescription(operations=ops, argument_mappings=mappings),
-        custom_node_map=mock_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     # The mathematical operation performed is (noting node definitions above):
     # > exp(add(add(1)), multiply(add(1)))
@@ -106,7 +106,7 @@ async def test_split_level_structure():
     )
     dag = AsyncFunctionDAG.from_node_list(
         dag_description=DAGDescription(operations=ops, argument_mappings=mappings),
-        custom_node_map=mock_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, AsyncFunctionDAG)
     actual_output = await dag.transform(1)

@@ -21,7 +21,7 @@ class ServiceNode(Node, frozen=True):
         return res
 
 
-custom_node_map: dict[str, type[Node]] = {
+custom_op_node_map: dict[str, type[Node]] = {
     "service": ServiceNode,
 }
 
@@ -39,7 +39,7 @@ def test_logged():
 
         dag = FunctionDAG.from_string(
             "logging",
-            custom_node_map={"logging": LoggedNode},
+            custom_op_node_map={"logging": LoggedNode},
         )
         assert isinstance(dag, FunctionDAG)
         actual_output = dag.transform(5)
@@ -67,7 +67,7 @@ def test_timed():
 
         dag = FunctionDAG.from_string(
             "timing",
-            custom_node_map={"timing": TimedNode},
+            custom_op_node_map={"timing": TimedNode},
         )
         assert isinstance(dag, FunctionDAG)
         actual_output = dag.transform(5)
@@ -80,7 +80,7 @@ def test_timed():
 def test_bypass():
     dag = FunctionDAG.from_string(
         "service",
-        custom_node_map=custom_node_map,
+        custom_op_node_map=custom_op_node_map,
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -105,7 +105,7 @@ def test_http_client():
 
         dag = FunctionDAG.from_string(
             "service",
-            custom_node_map=custom_node_map,
+            custom_op_node_map=custom_op_node_map,
         )
         assert isinstance(dag, FunctionDAG)
 

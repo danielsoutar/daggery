@@ -29,11 +29,13 @@ class FunctionDAG(BaseModel, frozen=True):
     # returning instances of InvalidGraph, making this code exception-free.
     @classmethod
     def from_prevalidated_dag(
-        cls, prevalidated_dag: PrevalidatedDAG, custom_node_map: dict[str, type[Node]]
+        cls,
+        prevalidated_dag: PrevalidatedDAG,
+        custom_op_node_map: dict[str, type[Node]],
     ) -> Union["FunctionDAG", InvalidGraph]:
         node_names = [node.node_name for node in prevalidated_dag.nodes]
         for name in node_names:
-            if name not in custom_node_map.keys():
+            if name not in custom_op_node_map.keys():
                 return InvalidGraph(
                     message=f"Invalid internal node_name found in prevalidated DAG: {name}"
                 )
@@ -46,7 +48,7 @@ class FunctionDAG(BaseModel, frozen=True):
             name = prevalidated_node.name
             child_nodes = [graph_nodes[child] for child in prevalidated_node.children]
 
-            node_class = custom_node_map[prevalidated_node.node_name]
+            node_class = custom_op_node_map[prevalidated_node.node_name]
             node = node_class(name=name, children=tuple(child_nodes))
             if not node.model_config.get("frozen", False):
                 return InvalidGraph(
@@ -70,23 +72,23 @@ class FunctionDAG(BaseModel, frozen=True):
     def from_node_list(
         cls,
         dag_description: DAGDescription,
-        custom_node_map: dict[str, type[Node]],
+        custom_op_node_map: dict[str, type[Node]],
     ) -> Union["FunctionDAG", InvalidGraph]:
         prevalidated_dag = PrevalidatedDAG.from_node_list(dag_description)
         if isinstance(prevalidated_dag, InvalidGraph):
             return prevalidated_dag
         return cls.from_prevalidated_dag(
             prevalidated_dag,
-            custom_node_map,
+            custom_op_node_map,
         )
 
     @classmethod
     def nullable_from_node_list(
         cls,
         dag_description: DAGDescription,
-        custom_node_map: dict[str, type[Node]],
+        custom_op_node_map: dict[str, type[Node]],
     ) -> Optional["FunctionDAG"]:
-        dag = cls.from_node_list(dag_description, custom_node_map)
+        dag = cls.from_node_list(dag_description, custom_op_node_map)
         if isinstance(dag, InvalidGraph):
             return None
         return dag
@@ -95,36 +97,36 @@ class FunctionDAG(BaseModel, frozen=True):
     def throwable_from_node_list(
         cls,
         dag_description: DAGDescription,
-        custom_node_map: dict[str, type[Node]],
+        custom_op_node_map: dict[str, type[Node]],
     ) -> "FunctionDAG":
-        dag = cls.from_node_list(dag_description, custom_node_map)
+        dag = cls.from_node_list(dag_description, custom_op_node_map)
         if isinstance(dag, InvalidGraph):
             raise ValueError(dag.message)
         return dag
 
     @classmethod
     def from_string(
-        cls, dag_description: str, custom_node_map: dict[str, type[Node]]
+        cls, dag_description: str, custom_op_node_map: dict[str, type[Node]]
     ) -> Union["FunctionDAG", InvalidGraph]:
         prevalidated_dag = PrevalidatedDAG.from_string(dag_description)
         if isinstance(prevalidated_dag, EmptyDAG):
             return InvalidGraph(message=prevalidated_dag.message)
-        return cls.from_prevalidated_dag(prevalidated_dag, custom_node_map)
+        return cls.from_prevalidated_dag(prevalidated_dag, custom_op_node_map)
 
     @classmethod
     def nullable_from_string(
-        cls, dag_description: str, custom_node_map: dict[str, type[Node]]
+        cls, dag_description: str, custom_op_node_map: dict[str, type[Node]]
     ) -> Optional["FunctionDAG"]:
-        dag = cls.from_string(dag_description, custom_node_map)
+        dag = cls.from_string(dag_description, custom_op_node_map)
         if isinstance(dag, InvalidGraph):
             return None
         return dag
 
     @classmethod
     def throwable_from_string(
-        cls, dag_description: str, custom_node_map: dict[str, type[Node]]
+        cls, dag_description: str, custom_op_node_map: dict[str, type[Node]]
     ) -> "FunctionDAG":
-        dag = cls.from_string(dag_description, custom_node_map)
+        dag = cls.from_string(dag_description, custom_op_node_map)
         if isinstance(dag, InvalidGraph):
             raise ValueError(dag.message)
         return dag

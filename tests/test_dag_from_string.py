@@ -19,13 +19,13 @@ class Baz(Node, frozen=True):
         return value - 5
 
 
-custom_node_map: dict[str, type[Node]] = {"foo": Foo, "bar": Bar, "baz": Baz}
+custom_op_node_map: dict[str, type[Node]] = {"foo": Foo, "bar": Bar, "baz": Baz}
 
 
 def test_single_node():
     dag = FunctionDAG.from_string(
         "foo",
-        custom_node_map=custom_node_map,
+        custom_op_node_map=custom_op_node_map,
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -40,7 +40,7 @@ def test_single_node():
 def test_multiple_nodes():
     dag = FunctionDAG.from_string(
         "foo >> bar >> baz",
-        custom_node_map=custom_node_map,
+        custom_op_node_map=custom_op_node_map,
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -64,7 +64,7 @@ def test_multiple_nodes():
 def test_multiple_nodes_of_same_type():
     dag = FunctionDAG.from_string(
         "foo >> foo >> foo",
-        custom_node_map=custom_node_map,
+        custom_op_node_map=custom_op_node_map,
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -83,7 +83,7 @@ def test_multiple_nodes_of_same_type():
 def test_from_invalid_string():
     result = FunctionDAG.from_string(
         "foo >> invalid >> baz",
-        custom_node_map=custom_node_map,
+        custom_op_node_map=custom_op_node_map,
     )
     assert isinstance(result, InvalidGraph)
     assert (
@@ -95,7 +95,7 @@ def test_from_invalid_string():
 def test_empty_string():
     result = FunctionDAG.from_string(
         "",
-        custom_node_map=custom_node_map,
+        custom_op_node_map=custom_op_node_map,
     )
     assert isinstance(result, InvalidGraph)
     assert "DAG string is empty and therefore invalid" == result.message
@@ -104,7 +104,7 @@ def test_empty_string():
 def test_whitespace_only_string():
     result = FunctionDAG.from_string(
         "   ",
-        custom_node_map=custom_node_map,
+        custom_op_node_map=custom_op_node_map,
     )
     assert isinstance(result, InvalidGraph)
     assert "DAG string is empty and therefore invalid" == result.message

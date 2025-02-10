@@ -27,11 +27,11 @@ class AsyncPing(AsyncNode, frozen=True):
         return await proc.wait()
 
 
-mock_node_map: Dict[str, type[AsyncNode]] = {"foo": AsyncFoo, "ping": AsyncPing}
+mock_op_node_map: Dict[str, type[AsyncNode]] = {"foo": AsyncFoo, "ping": AsyncPing}
 
 
 async def test_single_node():
-    dag = AsyncFunctionDAG.from_string("foo", custom_node_map=mock_node_map)
+    dag = AsyncFunctionDAG.from_string("foo", custom_op_node_map=mock_op_node_map)
     assert isinstance(dag, AsyncFunctionDAG)
 
     # Create expected instance
@@ -45,7 +45,7 @@ async def test_single_node():
 async def test_multiple_nodes():
     dag = AsyncFunctionDAG.from_string(
         "foo >> ping",
-        custom_node_map=mock_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, AsyncFunctionDAG)
 
@@ -63,7 +63,7 @@ async def test_multiple_nodes():
 async def test_multiple_nodes_of_same_type():
     dag = AsyncFunctionDAG.from_string(
         "foo >> foo >> foo",
-        custom_node_map=mock_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, AsyncFunctionDAG)
 
@@ -85,7 +85,7 @@ async def test_multiple_nodes_of_same_type():
 def test_from_invalid_string():
     result = AsyncFunctionDAG.from_string(
         "foo >> invalid >> baz",
-        custom_node_map=mock_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(result, InvalidGraph)
     assert (
@@ -95,13 +95,13 @@ def test_from_invalid_string():
 
 
 def test_empty_string():
-    result = AsyncFunctionDAG.from_string("", custom_node_map={})
+    result = AsyncFunctionDAG.from_string("", custom_op_node_map={})
     assert isinstance(result, InvalidGraph)
     assert "DAG string is empty and therefore invalid" == result.message
 
 
 def test_whitespace_only_string():
-    result = AsyncFunctionDAG.from_string("   ", custom_node_map={})
+    result = AsyncFunctionDAG.from_string("   ", custom_op_node_map={})
     assert isinstance(result, InvalidGraph)
     assert "DAG string is empty and therefore invalid" == result.message
 

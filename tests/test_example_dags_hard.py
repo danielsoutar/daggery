@@ -88,7 +88,7 @@ class MutableTailNode(AsyncNode, frozen=True):
         return [v for sublist in lists for v in sublist]
 
 
-mock_node_map = {
+mock_op_node_map = {
     "add": AddAsyncNode,
     "mul": MultiplyAsyncNode,
     "exp": ExpAsyncNode,
@@ -151,7 +151,7 @@ async def test_free_node_insertable_anywhere():
         )
         dag = AsyncFunctionDAG.from_node_list(
             DAGDescription(operations=ops, argument_mappings=mappings),
-            custom_node_map=mock_node_map,
+            custom_op_node_map=mock_op_node_map,
         )
         assert isinstance(dag, AsyncFunctionDAG)
         expected_num_batches = num_batches
@@ -189,7 +189,7 @@ async def test_transitive_closure_graph():
     )
     dag = AsyncFunctionDAG.from_node_list(
         DAGDescription(operations=ops, argument_mappings=mappings),
-        custom_node_map=mock_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, AsyncFunctionDAG)
     # This graph has every node pointing to all of its successor nodes.
@@ -228,7 +228,7 @@ async def test_mutable_arguments_are_dangerous():
     )
     dag = AsyncFunctionDAG.from_node_list(
         DAGDescription(operations=ops, argument_mappings=mappings),
-        custom_node_map=mock_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, AsyncFunctionDAG)
     actual_output = await dag.transform([])

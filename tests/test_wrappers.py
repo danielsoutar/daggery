@@ -20,20 +20,20 @@ class AsyncFoo(AsyncNode, frozen=True):
         return value * value
 
 
-custom_node_map: dict[str, type[Node]] = {"foo": Foo}
-custom_async_node_map: dict[str, type[AsyncNode]] = {"foo": AsyncFoo}
+custom_op_node_map: dict[str, type[Node]] = {"foo": Foo}
+custom_async_op_node_map: dict[str, type[AsyncNode]] = {"foo": AsyncFoo}
 
 
 def test_function_dag_nullable_from_string():
     dag_description = "foo"
 
     # Positive case
-    dag = FunctionDAG.nullable_from_string(dag_description, custom_node_map)
+    dag = FunctionDAG.nullable_from_string(dag_description, custom_op_node_map)
     assert isinstance(dag, FunctionDAG)
 
     # Negative case
     invalid_dag_description = "invalid"
-    dag = FunctionDAG.nullable_from_string(invalid_dag_description, custom_node_map)
+    dag = FunctionDAG.nullable_from_string(invalid_dag_description, custom_op_node_map)
     assert dag is None
 
 
@@ -41,26 +41,28 @@ def test_function_dag_throwable_from_string():
     dag_description = "foo"
 
     # Positive case
-    dag = FunctionDAG.throwable_from_string(dag_description, custom_node_map)
+    dag = FunctionDAG.throwable_from_string(dag_description, custom_op_node_map)
     assert isinstance(dag, FunctionDAG)
 
     # Negative case
     invalid_dag_description = "invalid"
     with pytest.raises(ValueError):
-        FunctionDAG.throwable_from_string(invalid_dag_description, custom_node_map)
+        FunctionDAG.throwable_from_string(invalid_dag_description, custom_op_node_map)
 
 
 def test_async_function_dag_nullable_from_string():
     dag_description = "foo"
 
     # Positive case
-    dag = AsyncFunctionDAG.nullable_from_string(dag_description, custom_async_node_map)
+    dag = AsyncFunctionDAG.nullable_from_string(
+        dag_description, custom_async_op_node_map
+    )
     assert isinstance(dag, AsyncFunctionDAG)
 
     # Negative case
     invalid_dag_description = "invalid"
     dag = AsyncFunctionDAG.nullable_from_string(
-        invalid_dag_description, custom_async_node_map
+        invalid_dag_description, custom_async_op_node_map
     )
     assert dag is None
 
@@ -69,14 +71,16 @@ def test_async_function_dag_throwable_from_string():
     dag_description = "foo"
 
     # Positive case
-    dag = AsyncFunctionDAG.throwable_from_string(dag_description, custom_async_node_map)
+    dag = AsyncFunctionDAG.throwable_from_string(
+        dag_description, custom_async_op_node_map
+    )
     assert isinstance(dag, AsyncFunctionDAG)
 
     # Negative case
     invalid_dag_description = "invalid"
     with pytest.raises(Exception):
         AsyncFunctionDAG.throwable_from_string(
-            invalid_dag_description, custom_async_node_map
+            invalid_dag_description, custom_async_op_node_map
         )
 
 
@@ -85,7 +89,7 @@ def test_function_dag_nullable_from_node_list():
 
     # Positive case
     dag = FunctionDAG.nullable_from_node_list(
-        DAGDescription(operations=operations), custom_node_map
+        DAGDescription(operations=operations), custom_op_node_map
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -94,7 +98,7 @@ def test_function_dag_nullable_from_node_list():
         ops=(Operation(name="foo", op_name="invalid"),)
     )
     dag = FunctionDAG.nullable_from_node_list(
-        DAGDescription(operations=invalid_operations), custom_node_map
+        DAGDescription(operations=invalid_operations), custom_op_node_map
     )
     assert dag is None
 
@@ -104,7 +108,7 @@ def test_function_dag_throwable_from_node_list():
 
     # Positive case
     dag = FunctionDAG.throwable_from_node_list(
-        DAGDescription(operations=operations), custom_node_map
+        DAGDescription(operations=operations), custom_op_node_map
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -114,7 +118,7 @@ def test_function_dag_throwable_from_node_list():
     )
     with pytest.raises(ValueError):
         FunctionDAG.throwable_from_node_list(
-            DAGDescription(operations=invalid_operations), custom_node_map
+            DAGDescription(operations=invalid_operations), custom_op_node_map
         )
 
 
@@ -123,7 +127,7 @@ def test_async_function_dag_nullable_from_node_list():
 
     # Positive case
     dag = AsyncFunctionDAG.nullable_from_node_list(
-        DAGDescription(operations=operations), custom_async_node_map
+        DAGDescription(operations=operations), custom_async_op_node_map
     )
     assert isinstance(dag, AsyncFunctionDAG)
 
@@ -132,7 +136,7 @@ def test_async_function_dag_nullable_from_node_list():
         ops=(Operation(name="foo", op_name="invalid"),)
     )
     dag = AsyncFunctionDAG.nullable_from_node_list(
-        DAGDescription(operations=invalid_operations), custom_async_node_map
+        DAGDescription(operations=invalid_operations), custom_async_op_node_map
     )
     assert dag is None
 
@@ -142,7 +146,7 @@ def test_async_function_dag_throwable_from_node_list():
 
     # Positive case
     dag = AsyncFunctionDAG.throwable_from_node_list(
-        DAGDescription(operations=operations), custom_async_node_map
+        DAGDescription(operations=operations), custom_async_op_node_map
     )
     assert isinstance(dag, AsyncFunctionDAG)
 
@@ -152,5 +156,5 @@ def test_async_function_dag_throwable_from_node_list():
     )
     with pytest.raises(Exception):
         AsyncFunctionDAG.throwable_from_node_list(
-            DAGDescription(operations=invalid_operations), custom_async_node_map
+            DAGDescription(operations=invalid_operations), custom_async_op_node_map
         )

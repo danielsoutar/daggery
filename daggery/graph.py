@@ -116,14 +116,14 @@ class PrevalidatedDAG(BaseModel):
         parents_of_nodes: dict[str, list[str]] = defaultdict(list)
         for op in dag_description.operations.ops:
             mapping_available = op.name in argument_mappings.keys()
-            node_mappings: dict = {}
+            op_node_mappings: dict = {}
             if mapping_available:
                 # Non-root case, assumed to have >1 inputs.
-                node_mappings = argument_mappings[op.name]
+                op_node_mappings = argument_mappings[op.name]
             else:
                 if parents_of_nodes == {}:
                     # This must be the root.
-                    node_mappings = {"inputs": []}
+                    op_node_mappings = {"inputs": []}
                 else:
                     # Non-root case with no mapping - assumed to be unambiguous,
                     # meaning exactly one input.
@@ -135,12 +135,12 @@ class PrevalidatedDAG(BaseModel):
                             )
                         )
                     node_input = parents_of_nodes[op.name][0]
-                    node_mappings = {"inputs": [node_input]}
+                    op_node_mappings = {"inputs": [node_input]}
             node = PrevalidatedNode(
                 name=op.name,
                 node_name=op.op_name,
                 children=list(op.children),
-                input_nodes=node_mappings["inputs"],
+                input_nodes=op_node_mappings["inputs"],
             )
             seen_names.add(node.name)
             for child in node.children:
@@ -154,18 +154,18 @@ class PrevalidatedDAG(BaseModel):
                     message=f"Input is not topologically sorted: {node} references {seen_names}"
                 )
             # Check that mappings align with the relationships.
-            parents = [n for n in nodes if n.name in node_mappings["inputs"]]
+            parents = [n for n in nodes if n.name in op_node_mappings["inputs"]]
             correct_relationships = all(
                 node.name in parent.children for parent in parents
             )
             correct_inputs = set(parents_of_nodes[node.name]) == set(
-                node_mappings["inputs"]
+                op_node_mappings["inputs"]
             )
             if not correct_relationships or not correct_inputs:
                 return InvalidGraph(
                     message=(
                         f"Input has invalid mappings: {node} has {parents=} "
-                        f"but has these mappings: {node_mappings}"
+                        f"but has these mappings: {op_node_mappings}"
                     )
                 )
             nodes.append(node)

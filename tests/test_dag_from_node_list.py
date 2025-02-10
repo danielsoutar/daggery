@@ -24,7 +24,7 @@ class ExpNode(Node, frozen=True):
         return base**exponent
 
 
-mock_node_map = {
+mock_op_node_map = {
     "add": AddNode,
     "mul": MultiplyNode,
     "exp": ExpNode,
@@ -35,7 +35,7 @@ def test_single_node():
     ops = OperationSequence(ops=(Operation(name="add", op_name="add"),))
     dag = FunctionDAG.from_node_list(
         dag_description=DAGDescription(operations=ops),
-        custom_node_map=mock_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -59,7 +59,7 @@ def test_diamond_structure():
     mappings = (ArgumentMapping(op_name="exp0", inputs=("add1", "mul0")),)
     dag = FunctionDAG.from_node_list(
         DAGDescription(operations=ops, argument_mappings=mappings),
-        custom_node_map=mock_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     # The mathematical operation performed is (noting node definitions above):
     # > exp(add(add(1)), multiply(add(1)))
@@ -97,7 +97,7 @@ def test_split_level_structure():
     )
     assert isinstance(prevalidated_dag, PrevalidatedDAG)
     dag = FunctionDAG.from_prevalidated_dag(
-        prevalidated_dag, custom_node_map=mock_node_map
+        prevalidated_dag, custom_op_node_map=mock_op_node_map
     )
     assert isinstance(dag, FunctionDAG)
     actual_output = dag.transform(1)

@@ -49,7 +49,7 @@ class Quux(Node, frozen=True):
         return value // 2
 
 
-custom_node_map: dict[str, type[Node]] = {
+custom_op_node_map: dict[str, type[Node]] = {
     "foo": Foo,
     "bar": Bar,
     "baz": Baz,
@@ -64,13 +64,13 @@ def construct_graph(
     if isinstance(adjustment_request.operations, str):
         return FunctionDAG.from_string(
             dag_description=adjustment_request.operations,
-            custom_node_map=custom_node_map,
+            custom_op_node_map=custom_op_node_map,
         )
     else:
         return FunctionDAG.from_node_list(
             dag_description=adjustment_request.operations,
             argument_mappings=adjustment_request.argument_mappings,
-            custom_node_map=custom_node_map,
+            custom_op_node_map=custom_op_node_map,
         )
 
 

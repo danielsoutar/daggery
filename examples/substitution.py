@@ -53,7 +53,7 @@ class FooExternal(Node, frozen=True):
                     ArgumentMapping(op_name="combined", inputs=("qux", "quux")),
                 ),
             ),
-            custom_node_map={
+            custom_op_node_map={
                 "foo_internal": FooHeadInternal,
                 "qux": FooQuxInternal,
                 "quux": FooQuuxInternal,
@@ -101,7 +101,7 @@ def construct_dag() -> FunctionDAG | None:
                 )
             )
         ),
-        custom_node_map={
+        custom_op_node_map={
             "foo": FooExternal,
             "bar": BarExternal,
             "baz": BazExternal,

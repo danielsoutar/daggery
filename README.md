@@ -22,12 +22,12 @@ class Bar(Node, frozen=True):
 class Baz(Node, frozen=True):
     def transform(self, value: int) -> int: return value - 5
 
-custom_node_map = {"foo": Foo, "bar": Bar, "baz": Baz}
+custom_op_node_map = {"foo": Foo, "bar": Bar, "baz": Baz}
 
 # The below sequence can be thought of as a function composition.
 # i.e. combined = foo . bar . baz, or baz(bar(foo(x)))
 sequence = "foo >> bar >> baz"
-dag = FunctionDAG.from_string(sequence, custom_node_map)
+dag = FunctionDAG.from_string(sequence, custom_op_node_map)
 result = dag.transform(42)
 result
 # 1769
@@ -63,7 +63,7 @@ mappings = (
 
 dag = AsyncFunctionDAG.from_node_list(
     DAGDescription(operations=ops, argument_mappings=mappings),
-    custom_node_map,
+    custom_op_node_map,
 )
 result = await dag.transform(1)
 # 81
