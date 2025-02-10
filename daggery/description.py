@@ -75,7 +75,7 @@ class DAGDescription(BaseModel):
         # Argument mappings can be empty (e.g. the DAG is a linear sequence),
         # but any mapping must correctly reference the given operations.
         # Block duplicate mappings for the same op - this avoids ambiguous cases
-        # and realistically should never happen.
+        # and realistically would be an error.
         if len(self.argument_mappings) != len(set(self.argument_mappings)):
             raise ValueError(
                 "Duplicate mappings for the same operation are not allowed: "

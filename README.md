@@ -110,6 +110,8 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
     - [X] `OperationSequence -> OperationSequence`?
     - [X] `ArgumentMapping -> ArgumentMappingSequence`?
     - [X] `FunctionDAG -> OperationDAG`? `FunctionDAG -> DAG`?
+    - [ ] Tidy up graph.py with naming and data structures.
+    - [ ] Get the example with a FastAPI service working.
 - [ ] Showcase to others.
 - [ ] ???
 - [ ] Profit!
