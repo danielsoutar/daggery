@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class AsyncNode(BaseModel, ABC, frozen=True):
     name: str
-    children: Tuple["AsyncNode", ...] = ()
+    children: Tuple[str, ...] = ()
 
     @abstractmethod
     async def transform(self, *args):

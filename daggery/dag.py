@@ -40,22 +40,20 @@ class FunctionDAG(BaseModel, frozen=True):
                     message=f"Invalid internal node class found in prevalidated DAG: {node_class}"
                 )
 
-        graph_nodes: dict[str, Node] = {}
         ordered_nodes: list[DAGNode] = []
 
         # Creating immutable nodes back-to-front guarantees an immutable DAG.
         for prevalidated_node in reversed(prevalidated_dag.nodes):
             name = prevalidated_node.name
-            child_nodes = [graph_nodes[child] for child in prevalidated_node.children]
+            child_nodes = prevalidated_node.children
 
             node_class_constructor = custom_op_node_map[prevalidated_node.node_class]
-            node = node_class_constructor(name=name, children=tuple(child_nodes))
+            node = node_class_constructor(name=name, children=child_nodes)
             if not node.model_config.get("frozen", False):
                 return InvalidDAG(
                     message=f"Mutable node found in DAG ({node}). This is not supported."
                 )
 
-            graph_nodes[name] = node
             # We have a special case for the root node, enabling a standard
             # fetching of inputs in the transform.
             input_nodes = tuple(prevalidated_node.input_nodes) or ("__INPUT__",)

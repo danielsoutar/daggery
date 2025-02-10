@@ -1,10 +1,10 @@
 import asyncio
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union
 
 from pydantic import BaseModel
 
 from .async_node import AsyncNode
-from .description import ArgumentMapping, DAGDescription, OperationSequence
+from .description import DAGDescription
 from .prevalidate import EmptyDAG, InvalidDAG, PrevalidatedDAG
 from .utils.logging import logger_factory
 
@@ -45,7 +45,6 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
                     message=f"Invalid internal node class found in prevalidated DAG: {node_class}"
                 )
 
-        graph_nodes: dict[str, AsyncNode] = {}
         current_batch: list[AsyncDAGNode] = []
         ordered_nodes: list[tuple[AsyncDAGNode, ...]] = []
 
@@ -61,16 +60,15 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
         # create the next set with the current node in the next batch.
         for prevalidated_node in reversed(prevalidated_dag.nodes):
             name = prevalidated_node.name
-            child_nodes = [graph_nodes[child] for child in prevalidated_node.children]
+            child_nodes = prevalidated_node.children
 
             node_class_constructor = custom_op_node_map[prevalidated_node.node_class]
-            node = node_class_constructor(name=name, children=tuple(child_nodes))
+            node = node_class_constructor(name=name, children=child_nodes)
             if not node.model_config.get("frozen", False):
                 return InvalidDAG(
                     message=f"Mutable node found in DAG ({node}). This is not supported."
                 )
 
-            graph_nodes[name] = node
             # We have a special case for the root node, enabling a standard
             # fetching of inputs in the transform.
             input_nodes = tuple(prevalidated_node.input_nodes) or ("__INPUT__",)
@@ -81,9 +79,8 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
             # Given the order of traversal, check if any nodes in the current batch
             # are children of this node. Given the sortedness we know they can't be
             # its parents.
-            child_names = [child.name for child in child_nodes]
             found_new_batch = any(
-                sibling.naked_node.name in child_names for sibling in current_batch
+                sibling.naked_node.name in child_nodes for sibling in current_batch
             )
             if found_new_batch:
                 ordered_nodes.append(tuple(reversed(current_batch)))

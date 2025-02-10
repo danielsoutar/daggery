@@ -53,7 +53,7 @@ async def test_multiple_nodes():
         naked_node=AsyncPing(name="ping0", children=()), input_nodes=("foo0",)
     )
     node1 = AsyncDAGNode(
-        naked_node=AsyncFoo(name="foo0", children=(node2.naked_node,)),
+        naked_node=AsyncFoo(name="foo0", children=("ping0",)),
         input_nodes=("__INPUT__",),
     )
 
@@ -71,11 +71,11 @@ async def test_multiple_nodes_of_same_type():
         naked_node=AsyncFoo(name="foo2", children=()), input_nodes=("foo1",)
     )
     node2 = AsyncDAGNode(
-        naked_node=AsyncFoo(name="foo1", children=(node3.naked_node,)),
+        naked_node=AsyncFoo(name="foo1", children=("foo2",)),
         input_nodes=("foo0",),
     )
     node1 = AsyncDAGNode(
-        naked_node=AsyncFoo(name="foo0", children=(node2.naked_node,)),
+        naked_node=AsyncFoo(name="foo0", children=("foo1",)),
         input_nodes=("__INPUT__",),
     )
 

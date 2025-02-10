@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class Node(BaseModel, ABC, frozen=True):
     name: str
-    children: Tuple["Node", ...] = ()
+    children: Tuple[str, ...] = ()
 
     @abstractmethod
     def transform(self, *args):

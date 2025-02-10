@@ -46,10 +46,10 @@ def test_multiple_nodes():
 
     node3 = DAGNode(naked_node=Baz(name="baz0", children=()), input_nodes=("bar0",))
     node2 = DAGNode(
-        naked_node=Bar(name="bar0", children=(node3.naked_node,)), input_nodes=("foo0",)
+        naked_node=Bar(name="bar0", children=("baz0",)), input_nodes=("foo0",)
     )
     node1 = DAGNode(
-        naked_node=Foo(name="foo0", children=(node2.naked_node,)),
+        naked_node=Foo(name="foo0", children=("bar0",)),
         input_nodes=("__INPUT__",),
     )
 
@@ -70,10 +70,10 @@ def test_multiple_nodes_of_same_type():
 
     node3 = DAGNode(naked_node=Foo(name="foo2", children=()), input_nodes=("foo1",))
     node2 = DAGNode(
-        naked_node=Foo(name="foo1", children=(node3.naked_node,)), input_nodes=("foo0",)
+        naked_node=Foo(name="foo1", children=("foo2",)), input_nodes=("foo0",)
     )
     node1 = DAGNode(
-        naked_node=Foo(name="foo0", children=(node2.naked_node,)),
+        naked_node=Foo(name="foo0", children=("foo1",)),
         input_nodes=("__INPUT__",),
     )
 
