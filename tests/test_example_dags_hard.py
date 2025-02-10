@@ -5,7 +5,12 @@ import pytest
 
 from daggery.async_dag import AsyncFunctionDAG
 from daggery.async_node import AsyncNode
-from daggery.description import ArgumentMappingMetadata, Operation, OperationList
+from daggery.description import (
+    ArgumentMapping,
+    DAGDescription,
+    Operation,
+    OperationSequence,
+)
 
 
 class AddAsyncNode(AsyncNode, frozen=True):
@@ -126,27 +131,26 @@ async def test_free_node_insertable_anywhere():
         full_names = names[:offset] + ["sin0"] + names[offset:]
         full_rules = rules[:offset] + ["sin"] + rules[offset:]
         full_all_children = all_children[:offset] + [["max0"]] + all_children[offset:]
-        ops = OperationList(
-            items=[
-                Operation(name=name, rule=rule, children=children)
+        ops = OperationSequence(
+            ops=tuple(
+                Operation(name=name, op_name=rule, children=tuple(children))
                 for name, rule, children in zip(
                     full_names, full_rules, full_all_children
                 )
-            ]
+            )
         )
-        mappings: list[ArgumentMappingMetadata] = [
-            ArgumentMappingMetadata(
-                node_name="max0",
-                inputs=[
+        mappings = (
+            ArgumentMapping(
+                op_name="max0",
+                inputs=(
                     "sin0",
                     "add" + str(num_batches - 2),
                     "mul" + str(num_batches - 3),
-                ],
+                ),
             ),
-        ]
+        )
         dag = AsyncFunctionDAG.from_node_list(
-            graph_description=ops,
-            argument_mappings=mappings,
+            DAGDescription(operations=ops, argument_mappings=mappings),
             custom_node_map=mock_node_map,
         )
         assert isinstance(dag, AsyncFunctionDAG)
@@ -171,21 +175,20 @@ async def test_transitive_closure_graph():
     rules = ["sum"] * len(names)
     all_children = [names[i + 1 :] for i in range(len(names))]
     all_parents = [names[:i] for i in range(len(names))]
-    ops = OperationList(
-        items=[
-            Operation(name=name, rule=rule, children=children)
+    ops = OperationSequence(
+        ops=tuple(
+            Operation(name=name, op_name=rule, children=tuple(children))
             for name, rule, children in zip(names, rules, all_children)
-        ]
+        )
     )
     # Each node retrieves values from all of its ancestors, though the
     # ordering doesn't matter in this case since addition is commutative.
-    mappings: list[ArgumentMappingMetadata] = [
-        ArgumentMappingMetadata(node_name=name, inputs=parents)
+    mappings = tuple(
+        ArgumentMapping(op_name=name, inputs=tuple(parents))
         for name, parents in zip(names, all_parents)
-    ]
+    )
     dag = AsyncFunctionDAG.from_node_list(
-        graph_description=ops,
-        argument_mappings=mappings,
+        DAGDescription(operations=ops, argument_mappings=mappings),
         custom_node_map=mock_node_map,
     )
     assert isinstance(dag, AsyncFunctionDAG)
@@ -207,25 +210,24 @@ async def test_transitive_closure_graph():
 
 @pytest.mark.asyncio
 async def test_mutable_arguments_are_dangerous():
-    ops = OperationList(
-        items=[
+    ops = OperationSequence(
+        ops=(
             Operation(
-                name="mut_head", rule="mut_head", children=["mut_a", "mut_b", "mut_c"]
+                name="mut_head",
+                op_name="mut_head",
+                children=("mut_a", "mut_b", "mut_c"),
             ),
-            Operation(name="mut_a", rule="mut_a", children=["mut_tail"]),
-            Operation(name="mut_b", rule="mut_b", children=["mut_tail"]),
-            Operation(name="mut_c", rule="mut_c", children=["mut_tail"]),
-            Operation(name="mut_tail", rule="mut_tail", children=[]),
-        ]
-    )
-    mappings: list[ArgumentMappingMetadata] = [
-        ArgumentMappingMetadata(
-            node_name="mut_tail", inputs=["mut_a", "mut_b", "mut_c"]
+            Operation(name="mut_a", op_name="mut_a", children=("mut_tail",)),
+            Operation(name="mut_b", op_name="mut_b", children=("mut_tail",)),
+            Operation(name="mut_c", op_name="mut_c", children=("mut_tail",)),
+            Operation(name="mut_tail", op_name="mut_tail"),
         )
-    ]
+    )
+    mappings = (
+        ArgumentMapping(op_name="mut_tail", inputs=("mut_a", "mut_b", "mut_c")),
+    )
     dag = AsyncFunctionDAG.from_node_list(
-        graph_description=ops,
-        argument_mappings=mappings,
+        DAGDescription(operations=ops, argument_mappings=mappings),
         custom_node_map=mock_node_map,
     )
     assert isinstance(dag, AsyncFunctionDAG)

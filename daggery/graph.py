@@ -3,7 +3,7 @@ from typing import List, Union
 
 from pydantic import BaseModel, model_validator
 
-from .description import ArgumentMappingMetadata, OperationList
+from .description import DAGDescription
 from .utils.logging import logger_factory
 
 logger = logger_factory(__name__)
@@ -18,21 +18,21 @@ class InvalidGraph(BaseModel):
 
 
 class PrevalidatedNode(BaseModel):
-    # The name of this node. It must be unique.
+    # A descriptive name for this specific node. It must be unique.
     name: str
-    # The rule of this node.
-    rule: str
-    # The names of the nodes that depend on this node.
+    # The name of the underlying node to evaluate.
+    node_name: str
+    # The names of dependent nodes. These must be unique.
     children: List[str] = []
-    # The names of the nodes that this node depends on. These must be unique.
+    # The names of nodes this node depends on. These must be unique.
     input_nodes: List[str] = []
 
     @model_validator(mode="after")
     def name_and_rule_not_empty(self):
         if self.name == "":
             raise ValueError("PrevalidatedNode must have a name")
-        if self.rule == "":
-            raise ValueError("PrevalidatedNode must have a rule")
+        if self.node_name == "":
+            raise ValueError("PrevalidatedNode must have a node_name")
         return self
 
     @model_validator(mode="after")
@@ -65,12 +65,12 @@ class PrevalidatedDAG(BaseModel):
         return self
 
     @classmethod
-    def from_string(cls, graph_description: str) -> Union["PrevalidatedDAG", EmptyDAG]:
-        graph_description = graph_description.strip()
-        if graph_description == "":
+    def from_string(cls, dag_description: str) -> Union["PrevalidatedDAG", EmptyDAG]:
+        dag_description = dag_description.strip()
+        if dag_description == "":
             return EmptyDAG(message="DAG string is empty and therefore invalid")
 
-        rule_names = list(map(str.strip, graph_description.split(">>")))
+        rule_names = list(map(str.strip, dag_description.split(">>")))
         nodes = []
         seen_names = {rule: 0 for rule in rule_names}
         node_parents: dict[str, str] = {}
@@ -86,7 +86,7 @@ class PrevalidatedDAG(BaseModel):
             nodes.append(
                 PrevalidatedNode(
                     name=current_name,
-                    rule=current,
+                    node_name=current,
                     children=[child_name],
                     input_nodes=[parent_name] if parent_name else [],
                 )
@@ -98,25 +98,23 @@ class PrevalidatedDAG(BaseModel):
 
         last_node = PrevalidatedNode(
             name=last_node_name,
-            rule=rule_names[-1],
+            node_name=rule_names[-1],
             input_nodes=[parent_name] if parent_name else [],
         )
         return cls(nodes=nodes + [last_node])
 
     @classmethod
     def from_node_list(
-        cls,
-        graph_description: OperationList,
-        argument_mappings_list: List[ArgumentMappingMetadata],
+        cls, dag_description: DAGDescription
     ) -> Union["PrevalidatedDAG", InvalidGraph]:
         argument_mappings = {
-            mapping.node_name: {"inputs": mapping.inputs}
-            for mapping in argument_mappings_list
+            mapping.op_name: {"inputs": mapping.inputs}
+            for mapping in dag_description.argument_mappings
         }
         nodes: list[PrevalidatedNode] = []
         seen_names: set[str] = set()
         parents_of_nodes: dict[str, list[str]] = defaultdict(list)
-        for op in graph_description.items:
+        for op in dag_description.operations.ops:
             mapping_available = op.name in argument_mappings.keys()
             node_mappings: dict = {}
             if mapping_available:
@@ -133,15 +131,15 @@ class PrevalidatedDAG(BaseModel):
                         return InvalidGraph(
                             message=(
                                 f"Input has >1 root node: {op.name} has no "
-                                f"parents in {graph_description}"
+                                f"parents in {dag_description}"
                             )
                         )
                     node_input = parents_of_nodes[op.name][0]
                     node_mappings = {"inputs": [node_input]}
             node = PrevalidatedNode(
                 name=op.name,
-                rule=op.rule,
-                children=op.children,
+                node_name=op.op_name,
+                children=list(op.children),
                 input_nodes=node_mappings["inputs"],
             )
             seen_names.add(node.name)

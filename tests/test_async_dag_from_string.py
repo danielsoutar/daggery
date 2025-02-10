@@ -88,7 +88,10 @@ def test_from_invalid_string():
         custom_node_map=mock_node_map,
     )
     assert isinstance(result, InvalidGraph)
-    assert "Invalid rule found in unvalidated DAG: invalid" in result.message
+    assert (
+        "Invalid internal node_name found in prevalidated DAG: invalid"
+        in result.message
+    )
 
 
 def test_empty_string():

@@ -12,6 +12,7 @@ The two types currently exposed are:
 A `FunctionDAG` represents a graph of functions, while an `AsyncFunctionDAG` represents a graph of async functions (wow!). Both can take in a graph description via a string encoding a linear sequence of operations, using the following format in the example below:
 
 ```python
+# Note that frozen=True is used for all nodes - and is required by Daggery.
 class Foo(Node, frozen=True):
     def transform(self, value: int) -> int: return value * value
 
@@ -32,35 +33,38 @@ result
 # 1769
 ```
 
-More generally both accept a graph description, using a topologically-sorted list of desired operations naming supported rules, and a list of argument mappings for operations with multiple inputs:
+More generally both accept a DAG description, using a topologically-sorted list of desired operations and a list of argument mappings for operations with multiple inputs:
 
 ```python
 # Assume corresponding nodes for `add`, `mul` (multiply) and `exp` (exponentiate).
 # Assume these operations wait for some abitrary duration.
-ops = OperationList(
-        items=[
+ops = OperationSequence(
+        ops=(
             Operation(
-                name="add0", rule="add", children=["add1", "mul0"]
+                name="add0", op_name="add", children=("add1", "mul0")
             ),
             Operation(
-                name="add1", rule="add", children=["exp0"]
+                name="add1", op_name="add", children=("exp0",)
             ),
             Operation(
-                name="mul0", rule="mul", children=["exp0"]
+                name="mul0", op_name="mul", children=("exp0",)
             ),
             Operation(
-                name="exp0", rule="exp", children=[]
+                name="exp0", op_name="exp"
             ),
-        ]
+        )
     )
 # Only need to provide mappings when arguments are ambiguous.
-mappings: list[ArgumentMappingMetadata] = [
-    ArgumentMappingMetadata(
-        node_name="exp0", inputs=["add1", "mul0"]  # first arg comes from `add1`, second from `mul0`.
+mappings = (
+    ArgumentMapping(
+        op_name="exp0", inputs=("add1", "mul0")  # first arg comes from `add1`, second from `mul0`.
     ),
-]
+)
 
-dag = AsyncFunctionDAG.from_node_list(ops, mappings, custom_node_map)
+dag = AsyncFunctionDAG.from_node_list(
+    DAGDescription(operations=ops, argument_mappings=mappings),
+    custom_node_map,
+)
 result = await dag.transform(1)
 # 81
 ```
@@ -103,9 +107,9 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
 - [ ] Tidy up/standardise terminology.
     - [ ] `Node` vs `transform` vs `Operation`.
     - [ ] Different types of `Node`s.
-    - [ ] `OperationList -> OperationSequence`?
-    - [ ] `ArgumentMappingMetadata -> ArgumentMappingSequence`?
-    - [ ] `FunctionDAG -> OperationDAG`? `FunctionDAG -> DAG`?
+    - [X] `OperationSequence -> OperationSequence`?
+    - [X] `ArgumentMapping -> ArgumentMappingSequence`?
+    - [X] `FunctionDAG -> OperationDAG`? `FunctionDAG -> DAG`?
 - [ ] Showcase to others.
 - [ ] ???
 - [ ] Profit!

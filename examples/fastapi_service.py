@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from pydantic import ConfigDict
 
 from daggery.dag import FunctionDAG
-from daggery.description import AdjustmentRequest
+from daggery.description import DAGDescription
 from daggery.graph import InvalidGraph
 from daggery.node import Node
 from daggery.response import AdjustmentResponse
@@ -59,31 +59,31 @@ custom_node_map: dict[str, type[Node]] = {
 
 
 def construct_graph(
-    adjustment_request: AdjustmentRequest,
+    adjustment_request: DAGDescription,
 ) -> FunctionDAG | InvalidGraph:
     if isinstance(adjustment_request.operations, str):
         return FunctionDAG.from_string(
-            graph_description=adjustment_request.operations,
+            dag_description=adjustment_request.operations,
             custom_node_map=custom_node_map,
         )
     else:
         return FunctionDAG.from_node_list(
-            graph_description=adjustment_request.operations,
+            dag_description=adjustment_request.operations,
             argument_mappings=adjustment_request.argument_mappings,
             custom_node_map=custom_node_map,
         )
 
 
 @app.post("/adjustment", response_model=AdjustmentResponse)
-async def process_adjustment_request(adjustment_request: AdjustmentRequest):
+async def process_adjustment_request(adjustment_request: DAGDescription):
     """
-    Process an AdjustmentRequest.
+    Process an DAGDescription.
 
-    This endpoint receives a `AdjustmentRequest`, performs the specified series
+    This endpoint receives a `DAGDescription`, performs the specified series
     of operations, and returns a confirmation message with the result.
 
     ### Request Body
-    - name: The name of the `AdjustmentRequest` object.
+    - name: The name of the `DAGDescription` object.
     - value: The value to transform with operations.
     - operations: A string representing the series of operations to perform.
 
@@ -100,7 +100,7 @@ async def process_adjustment_request(adjustment_request: AdjustmentRequest):
     result = dag.transform(adjustment_request.value)
     return AdjustmentResponse(
         message=(
-            f"Received AdjustmentRequest with name: {adjustment_request.name} "
+            f"Received DAGDescription with name: {adjustment_request.name} "
             f"and value: {adjustment_request.value}. "
             f"Result after transformation: {result}"
         )

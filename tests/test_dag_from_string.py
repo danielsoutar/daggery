@@ -1,5 +1,4 @@
 import pytest
-from pydantic import ConfigDict
 
 from daggery.dag import DAGNode, FunctionDAG, InvalidGraph
 from daggery.node import Node
@@ -87,7 +86,10 @@ def test_from_invalid_string():
         custom_node_map=custom_node_map,
     )
     assert isinstance(result, InvalidGraph)
-    assert "Invalid rule found in unvalidated DAG: invalid" in result.message
+    assert (
+        "Invalid internal node_name found in prevalidated DAG: invalid"
+        in result.message
+    )
 
 
 def test_empty_string():

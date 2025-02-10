@@ -1,19 +1,22 @@
-from typing import List
+from typing import Tuple
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, model_validator
 
 
-class Operation(BaseModel):
+class Operation(BaseModel, frozen=True):
+    # A descriptive name for this specific operation. It must be unique.
     name: str
-    rule: str
-    children: List[str] = []
+    # The name of the operation to perform.
+    op_name: str
+    # The names of dependent operations.
+    children: Tuple[str, ...] = ()
 
     @model_validator(mode="after")
-    def name_and_rule_not_empty(self):
+    def name_and_op_name_not_empty(self):
         if self.name == "":
             raise ValueError("An Operation must have a name")
-        if self.rule == "":
-            raise ValueError("An Operation must have a rule")
+        if self.op_name == "":
+            raise ValueError("An Operation must have an op_name")
         return self
 
     @model_validator(mode="after")
@@ -23,77 +26,69 @@ class Operation(BaseModel):
         return self
 
 
-class ArgumentMappingMetadata(BaseModel):
-    # The name of the node. It should be unique.
-    node_name: str
-    # The named arguments as inputs to the given node. These should be in the
-    # same order as the node's arguments. For example, if a node has two ordered
+class ArgumentMapping(BaseModel, frozen=True):
+    op_name: str
+    # Named arguments as inputs to the specified operation. These should be in the
+    # same order as the op's arguments. For example, if an op has two ordered
     # arguments, `base` and `exponent`, then the input values should be
-    # ["name_of_node_with_base", "name_of_node_with_exponent"].
-    inputs: List[str] = []
-    # Nodes always have one output, so no need to name them.
+    # ("name_of_op_with_base", "name_of_op_with_exponent").
+    inputs: Tuple[str, ...] = ()
+    # Operations always have one output, so no need to name them.
     # TODO: Consider 'assigning' outputs as opposed to the current approach of
     # always broadcasting. Decide at what level of abstraction this would be
     # useful.
 
     @model_validator(mode="after")
     def name_not_empty(self):
-        if self.node_name.strip() == "":
-            raise ValueError("An ArgumentMappingMetadata must name a node")
+        if self.op_name.strip() == "":
+            raise ValueError("An ArgumentMapping must name an operation")
         # No need to check inputs are not empty, as this is technically
         # allowed if the head is specified, albeit redundant.
         return self
 
 
-class OperationList(BaseModel):
-    """
-    A non-empty immutable list of Operations, encoding a graph in node list
-    form.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    items: List[Operation]
+class OperationSequence(BaseModel, frozen=True):
+    ops: Tuple[Operation, ...]
 
     @model_validator(mode="after")
-    def operations_not_empty(self):
-        if len(self.items) == 0:
-            raise ValueError("An OperationList cannot be empty")
+    def ops_not_empty(self):
+        if len(self.ops) == 0:
+            raise ValueError("An OperationSequence cannot be empty")
+        return self
+
+    @model_validator(mode="after")
+    def ops_unique(self):
+        op_names = [op.name for op in self.ops]
+        if len(self.ops) != len(set(op_names)):
+            raise ValueError(
+                f"OperationSequence cannot contain duplicate operations: {self.ops}"
+            )
         return self
 
 
-class AdjustmentRequest(BaseModel):
-    name: str
-    value: int
-    operations: str | OperationList
-    argument_mappings: List[ArgumentMappingMetadata]
-
-    @model_validator(mode="after")
-    def operations_not_empty(self):
-        if isinstance(self.operations, str) and self.operations.strip() == "":
-            raise ValueError("operations must not be empty")
-        return self
+class DAGDescription(BaseModel):
+    operations: OperationSequence
+    argument_mappings: Tuple[ArgumentMapping, ...] = ()
 
     @model_validator(mode="after")
     def argument_mappings_valid(self):
-        # If `operations` encodes a graph including nodes with multiple inputs or
-        # multiple outputs, argument_mappings should be set to disambiguate these cases.
-        # Otherwise argument_mappings can be empty.
-        operations_guaranteed_linear = isinstance(self.operations, str)
-        argument_mappings_set = len(self.argument_mappings) > 0
-        distinct_argument_mappings = set(
-            [mapping.node_name for mapping in self.argument_mappings]
-        )
-        argument_mappings_not_distinct = len(self.argument_mappings) != len(
-            distinct_argument_mappings
-        )
-        if operations_guaranteed_linear and argument_mappings_set:
+        # Argument mappings can be empty (e.g. the DAG is a linear sequence),
+        # but any mapping must correctly reference the given operations.
+        # Block duplicate mappings for the same op - this avoids ambiguous cases
+        # and realistically should never happen.
+        if len(self.argument_mappings) != len(set(self.argument_mappings)):
             raise ValueError(
-                "argument_mappings does not need to be set if operations is a string"
+                "Duplicate mappings for the same operation are not allowed: "
+                f"{self.argument_mappings}"
             )
-        if argument_mappings_not_distinct:
+        op_names = set([op.name for op in self.operations.ops])
+        mapping_op_names = set([mp.op_name for mp in self.argument_mappings])
+        mapping_child_names = set(
+            [child for mp in self.argument_mappings for child in mp.inputs]
+        )
+        if (mapping_op_names | mapping_child_names).difference(op_names):
             raise ValueError(
-                "argument_mappings cannot contain duplicate mappings for the same node"
+                "ArgumentMappings must all reference ops in operations: "
+                f"{self.argument_mappings}"
             )
-
         return self

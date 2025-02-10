@@ -1,5 +1,10 @@
 from daggery.dag import FunctionDAG
-from daggery.description import ArgumentMappingMetadata, Operation, OperationList
+from daggery.description import (
+    ArgumentMapping,
+    DAGDescription,
+    Operation,
+    OperationSequence,
+)
 from daggery.graph import InvalidGraph
 from daggery.node import Node
 
@@ -27,18 +32,27 @@ class FooCombinedInternal(Node, frozen=True):
 class FooExternal(Node, frozen=True):
     def transform(self, value):
         names = ["foo_internal", "qux", "quux", "combined"]
-        rules = ["foo_internal", "qux", "quux", "combined"]
-        all_children = [["qux", "quux"], ["combined"], ["combined"], []]
+        op_names = ["foo_internal", "qux", "quux", "combined"]
+        all_children: list[tuple] = [
+            ("qux", "quux"),
+            ("combined",),
+            ("combined",),
+            (),
+        ]
         dag = FunctionDAG.from_node_list(
-            graph_description=OperationList(
-                items=[
-                    Operation(name=name, rule=rule, children=children)
-                    for name, rule, children in zip(names, rules, all_children)
-                ]
+            dag_description=DAGDescription(
+                operations=OperationSequence(
+                    ops=tuple(
+                        Operation(name=name, op_name=op_name, children=children)
+                        for name, op_name, children in zip(
+                            names, op_names, all_children
+                        )
+                    )
+                ),
+                argument_mappings=(
+                    ArgumentMapping(op_name="combined", inputs=("qux", "quux")),
+                ),
             ),
-            argument_mappings=[
-                ArgumentMappingMetadata(node_name="combined", inputs=["qux", "quux"])
-            ],
             custom_node_map={
                 "foo_internal": FooHeadInternal,
                 "qux": FooQuxInternal,
@@ -78,14 +92,15 @@ def construct_dag() -> FunctionDAG | None:
     nested or otherwise, are also thread-safe.
     """
     dag = FunctionDAG.from_node_list(
-        graph_description=OperationList(
-            items=[
-                Operation(name="foo", rule="foo", children=["bar"]),
-                Operation(name="bar", rule="bar", children=["baz"]),
-                Operation(name="baz", rule="baz", children=[]),
-            ]
+        dag_description=DAGDescription(
+            operations=OperationSequence(
+                ops=(
+                    Operation(name="foo", op_name="foo", children=("bar",)),
+                    Operation(name="bar", op_name="bar", children=("baz",)),
+                    Operation(name="baz", op_name="baz"),
+                )
+            )
         ),
-        argument_mappings=[],
         custom_node_map={
             "foo": FooExternal,
             "bar": BarExternal,
