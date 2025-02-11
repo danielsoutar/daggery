@@ -91,7 +91,7 @@ def construct_dag() -> FunctionDAG | None:
     useful in those scenarios. Daggery DAGs do not rely on state, so these graphs,
     nested or otherwise, are also thread-safe.
     """
-    dag = FunctionDAG.from_dag_description(
+    return FunctionDAG.nullable_from_dag_description(
         dag_description=DAGDescription(
             operations=OperationSequence(
                 ops=(
@@ -107,9 +107,6 @@ def construct_dag() -> FunctionDAG | None:
             "baz": BazExternal,
         },
     )
-    # Casting to None allows us to use the walrus operator in calling code.
-    # TODO: Consider whether this comparison should be supported in error types.
-    return None if isinstance(dag, InvalidDAG) else dag
 
 
 def main():

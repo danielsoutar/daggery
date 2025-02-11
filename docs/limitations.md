@@ -12,12 +12,12 @@ This is *unlikely* to be a huge concern short-term, since:
 
 However, this ties in with the next and bigger issue:
 
-## Daggery broadcasts outputs to all children - it does not assign/map outputs
+## Daggery broadcasts outputs, not assign them
 
 The main reason for this is simplicity of implementation, but also because things can become more ambiguous. Consider what you would expect to happen if a node outputs three values, and has three children. Should it:
 
-a. Assign or map each output to a specific child? Is this fixed, or user-defined?
-b. Broadcast each output to each child? When should this happen?
+1. Assign or map each output to a specific child? Is this fixed, or user-defined?
+2. Broadcast each output to each child? When should this happen?
 
 Although (a) sounds sensible and in line with the inputs, this complicates the implementation, particularly if broadcasting semantics are still desirable, albeit restricted (perhaps broadcasting only occurs if the number of children > 1 and there is a single output).
 
@@ -39,10 +39,10 @@ When you have branching in a DAG, you are implicitly declaring the computation t
 
 ## Daggery is not benchmarked
 
-It is unlikely to have an issue with performance in the transform - the execution is extremely short and incurs little in the way of complex indices, nested structures, or waits (apart from the necessary `await` in gathering each batch for the async DAG).
+It is unlikely to have an issue with performance in the transform - the transform is extremely short and incurs little in the way of branching, complex indices, nested structures, or waits (apart from the necessary `await` in gathering each batch for the async DAG).
 
 A more credible concern is memory performance - see [here](https://github.com/pydantic/pydantic/issues/11194) for some details. In particular the question of scaling to large numbers of models is unknown. For practical usage this is likely not a concern, but could be greater if multiple levels of nesting occur, as would be the case with composition.
 
 ## Daggery does not perform type validation on the nodes themselves
 
-This is probably the most credible issue Daggery faces, being a validation library for DAGs, but is potentially hard to change. This is especially true in the face of functions that may miss type signatures, and are free-form functions. Unlike graph compilers for deep neural networks, we have many different types and combinations thereof to deal with. And Python is rather famous for being freestyle.
+This is probably the most credible issue Daggery faces, being a validation library for DAGs, but is potentially hard to implement, especially in a user-friendly way. This is especially true in the face of functions that may miss type signatures, and are not guaranteed to obey these signatures anyway. Unlike graph compilers for deep neural networks, we have many different types and combinations thereof to deal with. And Python is rather famous for being freestyle.
