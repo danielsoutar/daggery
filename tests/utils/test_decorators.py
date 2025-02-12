@@ -1,11 +1,11 @@
 from typing import Callable
 from unittest.mock import MagicMock, patch
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from daggery.dag import FunctionDAG
 from daggery.node import Node
-from daggery.utils.decorators import bypass, http_client, logged, timed
+from daggery.utils.decorators import bypass, cached, http_client, logged, timed
 from daggery.utils.logging import logger_factory
 
 
@@ -114,3 +114,30 @@ def test_http_client():
         mock_post.assert_called_once_with(base_url + ep, json=pl)
         assert result.status_code == 200
         assert result.json() == {"result": "success"}
+
+
+def test_cached():
+    with patch("daggery.utils.logging.logger_factory") as mock_logger_factory:
+        mock_logger = mock_logger_factory.return_value
+        mock_info = MagicMock()
+        mock_logger.info = mock_info
+
+        class CachedNode(Node, frozen=True):
+            @cached(mock_logger)
+            def transform(self, value: int) -> int:
+                return value * 2
+
+        dag = FunctionDAG.from_string(
+            "cached",
+            custom_op_node_map={"cached": CachedNode},
+        )
+        assert isinstance(dag, FunctionDAG)
+        first_output = dag.transform(5)
+        second_output = dag.transform(5)
+
+        expected_output = 10
+        assert expected_output == first_output
+        assert first_output == second_output
+        mock_info.assert_any_call("cached0: ")
+        mock_info.assert_any_call("  cached input(s): (5,)")
+        mock_info.assert_any_call("  cached output: 10")

@@ -100,3 +100,30 @@ def http_client(base_url):
         return wrapper
 
     return decorator
+
+
+def cached(logger):
+    """
+    This is a simple example of a caching decorator for a Node.
+    It `wraps` the enclosing method for niceties like debugging
+    and logging. It implements caching for the args.
+    """
+
+    def decorator(method):
+        cache: dict = {}
+
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            if args in cache.keys():
+                cached_result = cache[args]
+                logger.info(f"{self.name}: ")
+                logger.info(f"  cached input(s): {args}")
+                logger.info(f"  cached output: {cached_result}")
+                return cached_result
+            result = method(self, *args, **kwargs)
+            cache[args] = result
+            return result
+
+        return wrapper
+
+    return decorator
