@@ -31,10 +31,17 @@ def test_operation_with_unique_children():
     assert op.children == ("child1", "child2")
 
 
-def test_argument_mapping_metadata():
+def test_argument_mapping():
     mapping = ArgumentMapping(op_name="foo", inputs=("input1", "input2"))
     assert mapping.op_name == "foo"
     assert mapping.inputs == ("input1", "input2")
+
+
+def test_argument_mapping_must_name_operation():
+    with pytest.raises(
+        ValidationError, match="An ArgumentMapping must name an operation"
+    ):
+        ArgumentMapping(op_name="")
 
 
 def test_operation_sequence_not_empty():
@@ -70,6 +77,20 @@ def test_dag_description_with_duplicate_argument_mappings():
             argument_mappings=(
                 ArgumentMapping(op_name="foo"),
                 ArgumentMapping(op_name="foo"),
+            ),
+        )
+
+
+def test_dag_description_with_argument_mappings_naming_invalid_operations():
+    with pytest.raises(
+        ValidationError,
+        match="ArgumentMappings must all reference ops in operations:",
+    ):
+        DAGDescription(
+            operations=OperationSequence(ops=(Operation(name="foo", op_name="foo"),)),
+            argument_mappings=(
+                ArgumentMapping(op_name="foo"),
+                ArgumentMapping(op_name="not-foo"),
             ),
         )
 

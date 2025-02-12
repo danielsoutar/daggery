@@ -21,7 +21,7 @@ class ServiceNode(Node, frozen=True):
         return res
 
 
-custom_op_node_map: dict[str, type[Node]] = {
+mock_op_node_map: dict[str, type[Node]] = {
     "service": ServiceNode,
 }
 
@@ -80,7 +80,7 @@ def test_timed():
 def test_bypass():
     dag = FunctionDAG.from_string(
         "service",
-        custom_op_node_map=custom_op_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -105,7 +105,7 @@ def test_http_client():
 
         dag = FunctionDAG.from_string(
             "service",
-            custom_op_node_map=custom_op_node_map,
+            custom_op_node_map=mock_op_node_map,
         )
         assert isinstance(dag, FunctionDAG)
 

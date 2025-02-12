@@ -19,13 +19,26 @@ class Baz(Node, frozen=True):
         return value - 5
 
 
-custom_op_node_map: dict[str, type[Node]] = {"foo": Foo, "bar": Bar, "baz": Baz}
+# The ignore is used to silence mypy - in this case we want to demonstrate
+# an unsupported Node is blocked by Daggery.
+# As a bonus, the default is true anyway.
+class UnfrozenFoo(Node, frozen=False):  # type: ignore
+    def transform(self, value: int) -> int:
+        return value * value
+
+
+mock_op_node_map: dict[str, type[Node]] = {
+    "foo": Foo,
+    "bar": Bar,
+    "baz": Baz,
+    "unfrozen-foo": UnfrozenFoo,
+}
 
 
 def test_single_node():
     dag = FunctionDAG.from_string(
         "foo",
-        custom_op_node_map=custom_op_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -37,10 +50,20 @@ def test_single_node():
     assert dag.nodes == (expected_head,)
 
 
+def test_unfrozen_node_fails():
+    dag = FunctionDAG.from_string(
+        "unfrozen-foo",
+        custom_op_node_map=mock_op_node_map,
+    )
+    assert isinstance(dag, InvalidDAG)
+
+    assert "Mutable node found in DAG" in dag.message
+
+
 def test_multiple_nodes():
     dag = FunctionDAG.from_string(
         "foo >> bar >> baz",
-        custom_op_node_map=custom_op_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -64,7 +87,7 @@ def test_multiple_nodes():
 def test_multiple_nodes_of_same_type():
     dag = FunctionDAG.from_string(
         "foo >> foo >> foo",
-        custom_op_node_map=custom_op_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -83,7 +106,7 @@ def test_multiple_nodes_of_same_type():
 def test_from_invalid_string():
     result = FunctionDAG.from_string(
         "foo >> invalid >> baz",
-        custom_op_node_map=custom_op_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(result, InvalidDAG)
     assert (
@@ -95,7 +118,7 @@ def test_from_invalid_string():
 def test_empty_string():
     result = FunctionDAG.from_string(
         "",
-        custom_op_node_map=custom_op_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(result, InvalidDAG)
     assert "DAG string is empty and therefore invalid" == result.message
@@ -104,7 +127,7 @@ def test_empty_string():
 def test_whitespace_only_string():
     result = FunctionDAG.from_string(
         "   ",
-        custom_op_node_map=custom_op_node_map,
+        custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(result, InvalidDAG)
     assert "DAG string is empty and therefore invalid" == result.message

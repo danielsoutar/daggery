@@ -1,3 +1,6 @@
+import pytest
+from pydantic import ValidationError
+
 from daggery.description import (
     ArgumentMapping,
     DAGDescription,
@@ -341,3 +344,54 @@ def test_prevalidated_dag_from_dag_description_diamond_structure_only_required_m
         DAGDescription(operations=operations, argument_mappings=mappings)
     )
     assert expected_output == actual
+
+
+def test_prevalidated_node_has_non_empty_name_and_node_class():
+    with pytest.raises(ValidationError) as exc_info:
+        PrevalidatedNode(name="", node_class="my_op")
+    assert "PrevalidatedNode must have a name" in str(exc_info.value)
+    with pytest.raises(ValidationError) as exc_info:
+        PrevalidatedNode(name="some_name", node_class="")
+    assert "PrevalidatedNode must have a node classname" in str(exc_info.value)
+
+
+def test_prevalidated_node_ensures_unique_children():
+    with pytest.raises(ValidationError) as exc_info:
+        PrevalidatedNode(
+            name="some_name",
+            node_class="my_op",
+            children=("child0", "child1", "child1"),
+        )
+    assert "PrevalidatedNode must have unique children" in str(exc_info.value)
+
+
+def test_prevalidated_node_ensures_unique_input_nodes():
+    with pytest.raises(ValidationError) as exc_info:
+        PrevalidatedNode(
+            name="some_name",
+            node_class="my_op",
+            input_nodes=("child0", "child1", "child1"),
+        )
+    assert "PrevalidatedNode must have unique input nodes" in str(exc_info.value)
+
+
+def test_prevalidated_dag_fails_if_empty():
+    with pytest.raises(ValidationError) as exc_info:
+        PrevalidatedDAG(nodes=())
+    assert "PrevalidatedDAG must contain at least one node" in str(exc_info.value)
+
+
+def test_prevalidated_dag_not_topologically_sorted():
+    operations = OperationSequence(
+        ops=(
+            Operation(name="foo", op_name="foo", children=("bar",)),
+            Operation(name="bar", op_name="bar", children=("baz",)),
+            Operation(name="baz", op_name="baz", children=("foo",)),
+        )
+    )
+    mappings = ()
+    actual = PrevalidatedDAG.from_dag_description(
+        DAGDescription(operations=operations, argument_mappings=mappings)
+    )
+    assert isinstance(actual, InvalidDAG)
+    assert "Input is not topologically sorted" in actual.message

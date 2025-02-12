@@ -10,7 +10,7 @@ class AsyncNode(BaseModel, ABC, frozen=True):
 
     @abstractmethod
     async def transform(self, *args):
-        pass  # Abstract method
+        """Abstract method that should never be called."""
 
 
 # The below example illustrates an important point:

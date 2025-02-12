@@ -14,6 +14,15 @@ class AsyncFoo(AsyncNode, frozen=True):
         return value * value
 
 
+# The ignore is used to silence mypy - in this case we want to demonstrate
+# an unsupported Node is blocked by Daggery.
+# As a bonus, the default is true anyway.
+class UnfrozenFoo(AsyncNode, frozen=False):  # type: ignore
+    async def transform(self, value: int) -> int:
+        await asyncio.sleep(0.1)
+        return value * value
+
+
 class AsyncPing(AsyncNode, frozen=True):
     async def transform(self, count: int) -> int:
         proc = await asyncio.create_subprocess_exec(
@@ -27,7 +36,11 @@ class AsyncPing(AsyncNode, frozen=True):
         return await proc.wait()
 
 
-mock_op_node_map: Dict[str, type[AsyncNode]] = {"foo": AsyncFoo, "ping": AsyncPing}
+mock_op_node_map: Dict[str, type[AsyncNode]] = {
+    "foo": AsyncFoo,
+    "unfrozen-foo": UnfrozenFoo,
+    "ping": AsyncPing,
+}
 
 
 async def test_single_node():
@@ -40,6 +53,15 @@ async def test_single_node():
         input_nodes=("__INPUT__",),
     )
     assert dag.nodes == ((expected_head,),)
+
+
+def test_unfrozen_node_fails():
+    dag = AsyncFunctionDAG.from_string(
+        "unfrozen-foo",
+        custom_op_node_map=mock_op_node_map,
+    )
+    assert isinstance(dag, InvalidDAG)
+    assert "Mutable node found in DAG" in dag.message
 
 
 async def test_multiple_nodes():

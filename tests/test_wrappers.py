@@ -20,7 +20,7 @@ class AsyncFoo(AsyncNode, frozen=True):
         return value * value
 
 
-custom_op_node_map: dict[str, type[Node]] = {"foo": Foo}
+mock_op_node_map: dict[str, type[Node]] = {"foo": Foo}
 custom_async_op_node_map: dict[str, type[AsyncNode]] = {"foo": AsyncFoo}
 
 
@@ -28,12 +28,12 @@ def test_function_dag_nullable_from_string():
     dag_description = "foo"
 
     # Positive case
-    dag = FunctionDAG.nullable_from_string(dag_description, custom_op_node_map)
+    dag = FunctionDAG.nullable_from_string(dag_description, mock_op_node_map)
     assert isinstance(dag, FunctionDAG)
 
     # Negative case
     invalid_dag_description = "invalid"
-    dag = FunctionDAG.nullable_from_string(invalid_dag_description, custom_op_node_map)
+    dag = FunctionDAG.nullable_from_string(invalid_dag_description, mock_op_node_map)
     assert dag is None
 
 
@@ -41,13 +41,13 @@ def test_function_dag_throwable_from_string():
     dag_description = "foo"
 
     # Positive case
-    dag = FunctionDAG.throwable_from_string(dag_description, custom_op_node_map)
+    dag = FunctionDAG.throwable_from_string(dag_description, mock_op_node_map)
     assert isinstance(dag, FunctionDAG)
 
     # Negative case
     invalid_dag_description = "invalid"
     with pytest.raises(ValueError):
-        FunctionDAG.throwable_from_string(invalid_dag_description, custom_op_node_map)
+        FunctionDAG.throwable_from_string(invalid_dag_description, mock_op_node_map)
 
 
 def test_async_function_dag_nullable_from_string():
@@ -89,7 +89,7 @@ def test_function_dag_nullable_from_dag_description():
 
     # Positive case
     dag = FunctionDAG.nullable_from_dag_description(
-        DAGDescription(operations=operations), custom_op_node_map
+        DAGDescription(operations=operations), mock_op_node_map
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -98,7 +98,7 @@ def test_function_dag_nullable_from_dag_description():
         ops=(Operation(name="foo", op_name="invalid"),)
     )
     dag = FunctionDAG.nullable_from_dag_description(
-        DAGDescription(operations=invalid_operations), custom_op_node_map
+        DAGDescription(operations=invalid_operations), mock_op_node_map
     )
     assert dag is None
 
@@ -108,7 +108,7 @@ def test_function_dag_throwable_from_dag_description():
 
     # Positive case
     dag = FunctionDAG.throwable_from_dag_description(
-        DAGDescription(operations=operations), custom_op_node_map
+        DAGDescription(operations=operations), mock_op_node_map
     )
     assert isinstance(dag, FunctionDAG)
 
@@ -118,7 +118,7 @@ def test_function_dag_throwable_from_dag_description():
     )
     with pytest.raises(ValueError):
         FunctionDAG.throwable_from_dag_description(
-            DAGDescription(operations=invalid_operations), custom_op_node_map
+            DAGDescription(operations=invalid_operations), mock_op_node_map
         )
 
 

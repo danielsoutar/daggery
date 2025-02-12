@@ -22,14 +22,6 @@ class AsyncDAGNode(BaseModel, frozen=True):
 class AsyncFunctionDAG(BaseModel, frozen=True):
     nodes: Tuple[Tuple[AsyncDAGNode, ...], ...]
 
-    @property
-    def is_sequence(self) -> bool:
-        return all(
-            len(node.input_nodes) <= 1
-            for node_batch in self.nodes
-            for node in node_batch
-        )
-
     # We separate the creation of the DAG from the init method since this allows
     # returning instances of InvalidDAG, making this code exception-free.
     @classmethod

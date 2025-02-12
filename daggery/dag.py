@@ -21,10 +21,6 @@ class DAGNode(BaseModel, frozen=True):
 class FunctionDAG(BaseModel, frozen=True):
     nodes: Tuple[DAGNode, ...]
 
-    @property
-    def is_sequence(self) -> bool:
-        return all(len(node.input_nodes) <= 1 for node in self.nodes)
-
     # We separate the creation of the DAG from the init method since this allows
     # returning instances of InvalidDAG, making this code exception-free.
     @classmethod

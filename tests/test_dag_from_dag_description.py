@@ -6,7 +6,7 @@ from daggery.description import (
     OperationSequence,
 )
 from daggery.node import Node
-from daggery.prevalidate import PrevalidatedDAG
+from daggery.prevalidate import InvalidDAG, PrevalidatedDAG
 
 
 class AddNode(Node, frozen=True):
@@ -68,6 +68,23 @@ def test_diamond_structure():
     actual_output = dag.transform(1)
     expected_output = 81
     assert actual_output == expected_output
+
+
+def test_from_invalid_dag_description():
+    result = FunctionDAG.from_dag_description(
+        dag_description=DAGDescription(
+            operations=OperationSequence(
+                ops=(
+                    Operation(name="head-foo", op_name="foo"),
+                    Operation(name="another-head-foo", op_name="foo"),
+                )
+            ),
+            argument_mappings=(ArgumentMapping(op_name="head-foo"),),
+        ),
+        custom_op_node_map=mock_op_node_map,
+    )
+    assert isinstance(result, InvalidDAG)
+    assert "Input has >1 root node:" in result.message
 
 
 def test_split_level_structure():
