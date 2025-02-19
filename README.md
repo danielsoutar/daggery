@@ -2,6 +2,24 @@
 
 This mini-library exposes a set of types designed for executing directed, acyclic graphs (DAGs) of operations. It supports generating synchronous and asynchronous DAGs, allows custom operations, and provides wrappers for things like logging and timing.
 
+## Getting Started (Installation)
+
+1. Ensure you have `uv` [installed in your system](https://docs.astral.sh/uv/getting-started/installation/).
+2. `uv sync`
+3. That's it.
+
+For checking out the docs:
+
+```
+$ uv run mkdocs serve
+```
+
+For running tests:
+
+```
+$ uv run pytest
+```
+
 ## Exposed types
 
 The two types currently exposed are:

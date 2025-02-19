@@ -2,7 +2,7 @@
 authors = [
     {name = "Daniel Soutar", email = "danielsoutar144@gmail.com"},
 ]
-requires-python = "<4.0,>=3.10"
+requires-python = "<4.0,>=3.13"
 dependencies = [
     "pydantic<3.0.0,>=2.10.2",
     "colorlog<7.0.0,>=6.9.0",
