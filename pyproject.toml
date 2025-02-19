@@ -42,3 +42,8 @@ includes = []
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/daggery/"
+publish-url = "https://test.pypi.org/legacy/"
