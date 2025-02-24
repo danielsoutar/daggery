@@ -14,19 +14,19 @@ from daggery.prevalidate import InvalidDAG
 
 
 class AddAsyncNode(AsyncNode, frozen=True):
-    async def transform(self, value: float) -> float:
+    async def evaluate(self, value: float) -> float:
         await asyncio.sleep(0.1)
         return value + 1
 
 
 class MultiplyAsyncNode(AsyncNode, frozen=True):
-    async def transform(self, value: float) -> float:
+    async def evaluate(self, value: float) -> float:
         await asyncio.sleep(0.2)
         return value * 2
 
 
 class ExpAsyncNode(AsyncNode, frozen=True):
-    async def transform(self, base: float, exponent: float) -> float:
+    async def evaluate(self, base: float, exponent: float) -> float:
         await asyncio.sleep(0.2)
         return base**exponent
 
@@ -53,7 +53,7 @@ async def test_single_node():
     )
 
     assert dag.nodes == ((expected_head,),)
-    actual_output = await dag.transform(1)
+    actual_output = await dag.evaluate(1)
     expected_output = 2
     assert actual_output == expected_output
 
@@ -77,7 +77,7 @@ async def test_diamond_structure():
     # > exp(add(add(1)), multiply(add(1)))
     # = 81
     assert isinstance(dag, AsyncFunctionDAG)
-    actual_output = await dag.transform(1)
+    actual_output = await dag.evaluate(1)
     expected_output = 81
     assert actual_output == expected_output
 
@@ -127,6 +127,6 @@ async def test_split_level_structure():
         custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, AsyncFunctionDAG)
-    actual_output = await dag.transform(1)
+    actual_output = await dag.evaluate(1)
     expected_output = (2**4) ** 4
     assert actual_output == expected_output

@@ -10,12 +10,12 @@ from daggery.node import Node
 
 
 class Foo(Node, frozen=True):
-    def transform(self, value: int) -> int:
+    def evaluate(self, value: int) -> int:
         return value * value
 
 
 class AsyncFoo(AsyncNode, frozen=True):
-    async def transform(self, value: int) -> int:
+    async def evaluate(self, value: int) -> int:
         await asyncio.sleep(0.1)
         return value * value
 

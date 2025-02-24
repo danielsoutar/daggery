@@ -16,7 +16,7 @@ class MyCustomErrorType(BaseModel):
 class ServiceNode(Node, frozen=True):
     @http_client("http://example.com")
     @bypass(MyCustomErrorType, logger_factory("service"))
-    def transform(self, value: int, client: Callable) -> int:
+    def evaluate(self, value: int, client: Callable) -> int:
         res = client("/test", {"key": value})
         return res
 
@@ -34,7 +34,7 @@ def test_logged():
 
         class LoggedNode(Node, frozen=True):
             @logged(mock_logger)
-            def transform(self, value: int) -> int:
+            def evaluate(self, value: int) -> int:
                 return value * 2
 
         dag = FunctionDAG.from_string(
@@ -42,7 +42,7 @@ def test_logged():
             custom_op_node_map={"logging": LoggedNode},
         )
         assert isinstance(dag, FunctionDAG)
-        actual_output = dag.transform(5)
+        actual_output = dag.evaluate(5)
 
         expected_output = 10
         assert expected_output == actual_output
@@ -62,7 +62,7 @@ def test_timed():
 
         class TimedNode(Node, frozen=True):
             @timed(mock_logger)
-            def transform(self, value: int) -> int:
+            def evaluate(self, value: int) -> int:
                 return value + 3
 
         dag = FunctionDAG.from_string(
@@ -70,7 +70,7 @@ def test_timed():
             custom_op_node_map={"timing": TimedNode},
         )
         assert isinstance(dag, FunctionDAG)
-        actual_output = dag.transform(5)
+        actual_output = dag.evaluate(5)
 
         expected_output = 8
         assert expected_output == actual_output
@@ -87,7 +87,7 @@ def test_bypass():
     # Despite the service node never being able to handle an error,
     # we succesfully bypass the node and propagate the error through
     # the graph.
-    result = dag.transform(MyCustomErrorType(error_message="some error occurred"))
+    result = dag.evaluate(MyCustomErrorType(error_message="some error occurred"))
 
     assert result.error_message == "some error occurred"
 
@@ -109,7 +109,7 @@ def test_http_client():
         )
         assert isinstance(dag, FunctionDAG)
 
-        result = dag.transform(value)
+        result = dag.evaluate(value)
 
         mock_post.assert_called_once_with(base_url + ep, json=pl)
         assert result.status_code == 200
@@ -124,7 +124,7 @@ def test_cached():
 
         class CachedNode(Node, frozen=True):
             @cached(mock_logger)
-            def transform(self, value: int) -> int:
+            def evaluate(self, value: int) -> int:
                 return value * 2
 
         dag = FunctionDAG.from_string(
@@ -132,8 +132,8 @@ def test_cached():
             custom_op_node_map={"cached": CachedNode},
         )
         assert isinstance(dag, FunctionDAG)
-        first_output = dag.transform(5)
-        second_output = dag.transform(5)
+        first_output = dag.evaluate(5)
+        second_output = dag.evaluate(5)
 
         expected_output = 10
         assert expected_output == first_output

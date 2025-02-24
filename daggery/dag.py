@@ -14,8 +14,8 @@ class DAGNode(BaseModel, frozen=True):
     naked_node: Node
     input_nodes: Tuple[str, ...]
 
-    def transform(self, *args) -> Any:
-        return self.naked_node.transform(*args)
+    def evaluate(self, *args) -> Any:
+        return self.naked_node.evaluate(*args)
 
 
 class FunctionDAG(BaseModel, frozen=True):
@@ -51,7 +51,7 @@ class FunctionDAG(BaseModel, frozen=True):
                 )
 
             # We have a special case for the root node, enabling a standard
-            # fetching of inputs in the transform.
+            # fetching of inputs in the evaluate method.
             input_nodes = tuple(prevalidated_node.input_nodes) or ("__INPUT__",)
             ordered_nodes.append(
                 DAGNode(
@@ -125,14 +125,14 @@ class FunctionDAG(BaseModel, frozen=True):
             raise ValueError(dag.message)
         return dag
 
-    def transform(self, value: Any) -> Any:
+    def evaluate(self, value: Any) -> Any:
         context = {"__INPUT__": value}
         # The nodes are topologically sorted. As it turns out, this is also
         # a valid order of evaluation - by the time a node is reached, all
         # of its parents will already have been evaluated.
         for node in self.nodes:
             input_values = tuple(context[node_name] for node_name in node.input_nodes)
-            node_output_value = node.transform(*input_values)
+            node_output_value = node.evaluate(*input_values)
             self._pretty_log_node(node, input_values, node_output_value)
             context[node.naked_node.name] = node_output_value
         return node_output_value

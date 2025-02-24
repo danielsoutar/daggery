@@ -5,17 +5,17 @@ from daggery.node import Node
 
 
 class Foo(Node, frozen=True):
-    def transform(self, value: int) -> int:
+    def evaluate(self, value: int) -> int:
         return value * value
 
 
 class Bar(Node, frozen=True):
-    def transform(self, value: int) -> int:
+    def evaluate(self, value: int) -> int:
         return value + 10
 
 
 class Baz(Node, frozen=True):
-    def transform(self, value: int) -> int:
+    def evaluate(self, value: int) -> int:
         return value - 5
 
 
@@ -23,7 +23,7 @@ class Baz(Node, frozen=True):
 # an unsupported Node is blocked by Daggery.
 # As a bonus, the default is true anyway.
 class UnfrozenFoo(Node, frozen=False):  # type: ignore
-    def transform(self, value: int) -> int:
+    def evaluate(self, value: int) -> int:
         return value * value
 
 
@@ -78,7 +78,7 @@ def test_multiple_nodes():
 
     assert dag.nodes == (node1, node2, node3)
 
-    result = dag.transform(42)
+    result = dag.evaluate(42)
     expected_result = 1769
 
     assert expected_result == result

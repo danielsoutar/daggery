@@ -60,7 +60,7 @@ def bypass(error_types, logger):
     from other Operations.
 
     However, only the first error will be propagated. Handling
-    multiple errors and transforming them either requires a
+    multiple errors and evaluating them either requires a
     custom decorator or Operation.
     """
 

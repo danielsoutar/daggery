@@ -9,7 +9,7 @@ class AsyncNode(BaseModel, ABC, frozen=True):
     children: Tuple[str, ...] = ()
 
     @abstractmethod
-    async def transform(self, *args):
+    async def evaluate(self, *args):
         """Abstract method that should never be called."""
 
 
@@ -17,6 +17,6 @@ class AsyncNode(BaseModel, ABC, frozen=True):
 # Nodes are *immutable*, and this is checked!
 
 # class AsyncExampleNode(AsyncNode, frozen=True):
-#     async def transform(self, value: Any) -> Any:
+#     async def evaluate(self, value: Any) -> Any:
 #         await asyncio.sleep(1)
 #         return value

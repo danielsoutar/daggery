@@ -39,7 +39,7 @@ When you have branching in a DAG, you are implicitly declaring the computation t
 
 ## Daggery is not benchmarked
 
-It is unlikely to have an issue with performance in the transform - the transform is extremely short and incurs little in the way of branching, complex indices, nested structures, or waits (apart from the necessary `await` in gathering each batch for the async DAG).
+It is unlikely to have an issue with performance in the evaluate method - which is extremely short and incurs little in the way of branching, complex indices, nested structures, or waits (apart from the necessary `await` in gathering each batch for the async DAG).
 
 A more credible concern is memory performance - see [here](https://github.com/pydantic/pydantic/issues/11194) for some details. In particular the question of scaling to large numbers of models is unknown. For practical usage this is likely not a concern, but could be greater if multiple levels of nesting occur, as would be the case with composition.
 

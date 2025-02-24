@@ -12,7 +12,7 @@ An `Operation` is a semantic, high-level concept. It represents a desired action
 
 ## `Node`
 
-By contrast, a `Node` is the backing implementation of an `Operation` via its `transform`. The transform can either be a single function, a function calling multiple other functions, or even another DAG.
+By contrast, a `Node` is the backing implementation of an `Operation` via its `evaluate` method. This method can either be a single function, a function calling multiple other functions, or even another DAG.
 
 In the latter case, it is worth pointing out that an `Operation` can be thought of as mapping directly to a `Node`, or a sub-graph of conceptually lower-level `Operation`s that in turn are implemented via `Node`s.
 

@@ -10,27 +10,27 @@ from daggery.prevalidate import InvalidDAG
 
 
 class FooHeadInternal(Node, frozen=True):
-    def transform(self, value):
+    def evaluate(self, value):
         return value
 
 
 class FooQuxInternal(Node, frozen=True):
-    def transform(self, value):
+    def evaluate(self, value):
         return value
 
 
 class FooQuuxInternal(Node, frozen=True):
-    def transform(self, value):
+    def evaluate(self, value):
         return value
 
 
 class FooCombinedInternal(Node, frozen=True):
-    def transform(self, a, b):
+    def evaluate(self, a, b):
         return a * b
 
 
 class FooExternal(Node, frozen=True):
-    def transform(self, value):
+    def evaluate(self, value):
         names = ["foo_internal", "qux", "quux", "combined"]
         op_names = ["foo_internal", "qux", "quux", "combined"]
         all_children: list[tuple] = [
@@ -63,16 +63,16 @@ class FooExternal(Node, frozen=True):
         if isinstance(dag, InvalidDAG):
             return 0
         else:
-            return dag.transform(value)
+            return dag.evaluate(value)
 
 
 class BarExternal(Node, frozen=True):
-    def transform(self, value):
+    def evaluate(self, value):
         return value + 10
 
 
 class BazExternal(Node, frozen=True):
-    def transform(self, value):
+    def evaluate(self, value):
         return value - 5
 
 
@@ -80,7 +80,7 @@ def construct_dag() -> FunctionDAG | None:
     """
     This code demonstrates the usage of nested DAGs.
 
-    Because the DAG contains a nested DAG, the `transform` method of `FooExternal`
+    Because the DAG contains a nested DAG, the `evaluate` method of `FooExternal`
     is effectively substituted for a diamond-shaped graph of `Foo***Internal` nodes.
 
     This can be a useful pattern for decoupling a high-level set of Operations
@@ -111,7 +111,7 @@ def construct_dag() -> FunctionDAG | None:
 
 def main():
     if dag := construct_dag():
-        print(dag.transform(42))
+        print(dag.evaluate(42))
     else:
         print("Error when constructing DAG.")
 

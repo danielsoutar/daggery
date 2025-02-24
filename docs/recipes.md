@@ -14,7 +14,7 @@ In Daggery, this is supported via composition (the below snippet is from the sub
 
 ```python
 class FooExternal(Node, frozen=True):
-    def transform(self, value):
+    def evaluate(self, value):
         # Create a diamond graph.
         names = ["foo_internal", "qux", "quux", "combined"]
         op_names = ["foo_internal", "qux", "quux", "combined"]
@@ -119,13 +119,13 @@ def logged(logger):
     return decorator
 ```
 
-This exemplifies a basic logging decorator that can be attached to the transform of a Node:
+This exemplifies a basic logging decorator that can be attached to the evaluate method of a Node:
 
 ```python
 
 class Foo(Node, frozen=True):
     @logged(logger)
-    def transform(self, value: int) -> int:
+    def evaluate(self, value: int) -> int:
         ...
 ```
 
@@ -164,6 +164,6 @@ def bypass(error_types, logger):
     return decorator
 ```
 
-In this decorator we can skip, or 'bypass' a Node's transform entirely if one of the inputs matches an error type we accept, and the first error is returned. This enables Nodes to be decoupled from each other in having to know anything about errors.
+In this decorator we can skip, or 'bypass' a Node's evaluate method entirely if one of the inputs matches an error type we accept, and the first error is returned. This enables Nodes to be decoupled from each other in having to know anything about errors.
 
 Deeper integration with these decorators could be a viable option in the future with injected contexts, or more besides!

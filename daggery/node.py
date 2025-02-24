@@ -9,7 +9,7 @@ class Node(BaseModel, ABC, frozen=True):
     children: Tuple[str, ...] = ()
 
     @abstractmethod
-    def transform(self, *args):
+    def evaluate(self, *args):
         """Abstract method that should never be called."""
 
 
@@ -17,5 +17,5 @@ class Node(BaseModel, ABC, frozen=True):
 # Nodes are *immutable*, and this is checked!
 
 # class ExampleNode(Node, frozen=True):
-#     def transform(self, value: Any) -> Any:
+#     def evaluate(self, value: Any) -> Any:
 #         return value

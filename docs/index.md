@@ -13,13 +13,13 @@ For synchronous DAGs, use `FunctionDAG` like so - the following example shows a 
 ```python
 # Note that frozen=True is used for all nodes - and is required by Daggery.
 class Foo(Node, frozen=True):
-    def transform(self, value: int) -> int: return value * value
+    def evaluate(self, value: int) -> int: return value * value
 
 class Bar(Node, frozen=True):
-    def transform(self, value: int) -> int: return value + 10
+    def evaluate(self, value: int) -> int: return value + 10
 
 class Baz(Node, frozen=True):
-    def transform(self, value: int) -> int: return value - 5
+    def evaluate(self, value: int) -> int: return value - 5
 
 custom_op_node_map = {"foo": Foo, "bar": Bar, "baz": Baz}
 
@@ -27,7 +27,7 @@ custom_op_node_map = {"foo": Foo, "bar": Bar, "baz": Baz}
 # i.e. combined = foo . bar . baz, or baz(bar(foo(x)))
 sequence = "foo >> bar >> baz"
 dag = FunctionDAG.from_string(sequence, custom_op_node_map)
-result = dag.transform(42)
+result = dag.evaluate(42)
 result
 # 1769
 ```
@@ -38,15 +38,15 @@ By contrast, both can also take in a more general `DAGDescription` encoding more
 
 ```python
 class AddNode(Node, frozen=True):
-    def transform(self, value: float) -> float:
+    def evaluate(self, value: float) -> float:
         return value + 1
 
 class MultiplyNode(Node, frozen=True):
-    def transform(self, value: float) -> float:
+    def evaluate(self, value: float) -> float:
         return value * 2
 
 class ExpNode(Node, frozen=True):
-    def transform(self, base: float, exponent: float) -> float:
+    def evaluate(self, base: float, exponent: float) -> float:
         return base**exponent
 
 mock_op_node_map = {
@@ -81,7 +81,7 @@ dag = FunctionDAG.from_dag_description(
 )
 if isinstance(dag, InvalidDAG):
     do_something_with_invalid_dag(dag)
-result = dag.transform(1)
+result = dag.evaluate(1)
 # 81
 ```
 

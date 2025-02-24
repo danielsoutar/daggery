@@ -32,13 +32,13 @@ A `FunctionDAG` represents a DAG of functions, while an `AsyncFunctionDAG` repre
 ```python
 # Note that frozen=True is used for all nodes - and is required by Daggery.
 class Foo(Node, frozen=True):
-    def transform(self, value: int) -> int: return value * value
+    def evaluate(self, value: int) -> int: return value * value
 
 class Bar(Node, frozen=True):
-    def transform(self, value: int) -> int: return value + 10
+    def evaluate(self, value: int) -> int: return value + 10
 
 class Baz(Node, frozen=True):
-    def transform(self, value: int) -> int: return value - 5
+    def evaluate(self, value: int) -> int: return value - 5
 
 custom_op_node_map = {"foo": Foo, "bar": Bar, "baz": Baz}
 
@@ -48,7 +48,7 @@ sequence = "foo >> bar >> baz"
 dag = FunctionDAG.from_string(sequence, custom_op_node_map)
 if isinstance(dag, InvalidDAG):
     do_something_with_invalid_dag(dag)
-result = dag.transform(42)
+result = dag.evaluate(42)
 result
 # 1769
 ```
@@ -57,15 +57,15 @@ More generally both accept a DAG description, using a topologically-sorted seque
 
 ```python
 class AddNode(Node, frozen=True):
-    def transform(self, value: float) -> float:
+    def evaluate(self, value: float) -> float:
         return value + 1
 
 class MultiplyNode(Node, frozen=True):
-    def transform(self, value: float) -> float:
+    def evaluate(self, value: float) -> float:
         return value * 2
 
 class ExpNode(Node, frozen=True):
-    def transform(self, base: float, exponent: float) -> float:
+    def evaluate(self, base: float, exponent: float) -> float:
         return base**exponent
 
 mock_op_node_map = {
@@ -100,7 +100,7 @@ dag = FunctionDAG.from_dag_description(
 )
 if isinstance(dag, InvalidDAG):
     do_something_with_invalid_dag(dag)
-result = dag.transform(1)
+result = dag.evaluate(1)
 # 81
 ```
 
@@ -132,7 +132,7 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
 
 ## TODO:
 
-- [X] Add HTTP client decorator to `Node.transform`.
+- [X] Add HTTP client decorator to `Node.evaluate`.
 - [X] Confirm graph substitution works with nested DAGs inside Operations.
 - [X] Add examples.
 - [X] Add unit tests for the above.
@@ -140,7 +140,7 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
 - [X] Migrate to `uv`.
 - [X] Add docstrings/doc pages
 - [ ] Tidy up/standardise terminology.
-    - [ ] `Node` vs `transform` vs `Operation`.
+    - [ ] `Node` vs `evaluate` vs `Operation`.
     - [X] Different types of `Node`s.
     - [X] `OperationSequence -> OperationSequence`?
     - [X] `ArgumentMapping -> ArgumentMappingSequence`?

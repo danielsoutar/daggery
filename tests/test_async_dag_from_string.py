@@ -9,7 +9,7 @@ from daggery.prevalidate import InvalidDAG
 
 
 class AsyncFoo(AsyncNode, frozen=True):
-    async def transform(self, value: int) -> int:
+    async def evaluate(self, value: int) -> int:
         await asyncio.sleep(0.1)
         return value * value
 
@@ -18,13 +18,13 @@ class AsyncFoo(AsyncNode, frozen=True):
 # an unsupported Node is blocked by Daggery.
 # As a bonus, the default is true anyway.
 class UnfrozenFoo(AsyncNode, frozen=False):  # type: ignore
-    async def transform(self, value: int) -> int:
+    async def evaluate(self, value: int) -> int:
         await asyncio.sleep(0.1)
         return value * value
 
 
 class AsyncPing(AsyncNode, frozen=True):
-    async def transform(self, count: int) -> int:
+    async def evaluate(self, count: int) -> int:
         proc = await asyncio.create_subprocess_exec(
             "ping",
             "-c",

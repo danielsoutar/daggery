@@ -14,25 +14,25 @@ from daggery.description import (
 
 
 class AddAsyncNode(AsyncNode, frozen=True):
-    async def transform(self, value: float) -> float:
+    async def evaluate(self, value: float) -> float:
         await asyncio.sleep(0.05)
         return value + 1
 
 
 class MultiplyAsyncNode(AsyncNode, frozen=True):
-    async def transform(self, value: float) -> float:
+    async def evaluate(self, value: float) -> float:
         await asyncio.sleep(0.1)
         return value * 2
 
 
 class ExpAsyncNode(AsyncNode, frozen=True):
-    async def transform(self, base: float, exponent: float) -> float:
+    async def evaluate(self, base: float, exponent: float) -> float:
         await asyncio.sleep(0.1)
         return base**exponent
 
 
 class SineAsyncNode(AsyncNode, frozen=True):
-    async def transform(self, value: float) -> float:
+    async def evaluate(self, value: float) -> float:
         await asyncio.sleep(0.05)
         return math.sin(value)
 
@@ -41,7 +41,7 @@ class MaxAsyncNode(AsyncNode, frozen=True):
     # Handily, nodes support arbitrarily-sized arguments. And as
     # it turns out, type hinting supports variadic single-type
     # arguments too!
-    async def transform(self, *args: float) -> float:
+    async def evaluate(self, *args: float) -> float:
         await asyncio.sleep(0.05)
         return max(args)
 
@@ -50,40 +50,40 @@ class SumAsyncNode(AsyncNode, frozen=True):
     # Handily, nodes support arbitrarily-sized arguments. And as
     # it turns out, type hinting supports variadic single-type
     # arguments too!
-    async def transform(self, *args: int) -> int:
+    async def evaluate(self, *args: int) -> int:
         await asyncio.sleep(0.05)
         return sum(args)
 
 
 class MutableHeadNode(AsyncNode, frozen=True):
-    async def transform(self, value: list) -> list:
+    async def evaluate(self, value: list) -> list:
         await asyncio.sleep(0.05)
         return value
 
 
 class MutableANode(AsyncNode, frozen=True):
-    async def transform(self, value: list) -> list:
+    async def evaluate(self, value: list) -> list:
         await asyncio.sleep(0.01)
         value.append("A")
         return value
 
 
 class MutableBNode(AsyncNode, frozen=True):
-    async def transform(self, value: list) -> list:
+    async def evaluate(self, value: list) -> list:
         await asyncio.sleep(0.03)
         value.append("B")
         return value
 
 
 class MutableCNode(AsyncNode, frozen=True):
-    async def transform(self, value: list) -> list:
+    async def evaluate(self, value: list) -> list:
         await asyncio.sleep(0.05)
         value.append("C")
         return value
 
 
 class MutableTailNode(AsyncNode, frozen=True):
-    async def transform(self, *lists: list) -> list:
+    async def evaluate(self, *lists: list) -> list:
         await asyncio.sleep(0.05)
         return [v for sublist in lists for v in sublist]
 
@@ -163,7 +163,7 @@ async def test_free_node_insertable_anywhere():
         expected_pos = offset
         assert "sin0" == unrolled_nodes[expected_pos].naked_node.name
 
-        actual_output = await dag.transform(1)
+        actual_output = await dag.evaluate(1)
         # The multiply 'branch' will be the largest.
         expected_output = 2 ** (num_batches - 1)
         assert actual_output == expected_output
@@ -203,7 +203,7 @@ async def test_transitive_closure_graph():
     # So the graph would be:
     # sum(1) -> sum(1, 1) -> sum(1, 2, 1) -> ... -> sum(1..N, 1)
     # We have 6 nodes, so the result should be sum(1..5, 1) = 15 + 1 = 16.
-    actual_output = await dag.transform(1)
+    actual_output = await dag.evaluate(1)
     expected_output = 16
     assert expected_output == actual_output
 
@@ -231,7 +231,7 @@ async def test_mutable_arguments_are_dangerous():
         custom_op_node_map=mock_op_node_map,
     )
     assert isinstance(dag, AsyncFunctionDAG)
-    actual_output = await dag.transform([])
+    actual_output = await dag.evaluate([])
     # The list is *mutated* across nodes unexpectedly - mutability implies state,
     # and state should be sequential! DO NOT USE BRANCHING FOR STATEFUL NODES.
     expected_output = ["A", "B", "C"] * 3

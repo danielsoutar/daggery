@@ -10,17 +10,17 @@ from daggery.prevalidate import InvalidDAG, PrevalidatedDAG
 
 
 class AddNode(Node, frozen=True):
-    def transform(self, value: float) -> float:
+    def evaluate(self, value: float) -> float:
         return value + 1
 
 
 class MultiplyNode(Node, frozen=True):
-    def transform(self, value: float) -> float:
+    def evaluate(self, value: float) -> float:
         return value * 2
 
 
 class ExpNode(Node, frozen=True):
-    def transform(self, base: float, exponent: float) -> float:
+    def evaluate(self, base: float, exponent: float) -> float:
         return base**exponent
 
 
@@ -65,7 +65,7 @@ def test_diamond_structure():
     # > exp(add(add(1)), multiply(add(1)))
     # = 81
     assert isinstance(dag, FunctionDAG)
-    actual_output = dag.transform(1)
+    actual_output = dag.evaluate(1)
     expected_output = 81
     assert actual_output == expected_output
 
@@ -117,6 +117,6 @@ def test_split_level_structure():
         prevalidated_dag, custom_op_node_map=mock_op_node_map
     )
     assert isinstance(dag, FunctionDAG)
-    actual_output = dag.transform(1)
+    actual_output = dag.evaluate(1)
     expected_output = (2**4) ** 4
     assert actual_output == expected_output

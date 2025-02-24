@@ -15,8 +15,8 @@ class AsyncDAGNode(BaseModel, frozen=True):
     naked_node: AsyncNode
     input_nodes: Tuple[str, ...]
 
-    async def transform(self, *args) -> Any:
-        return await self.naked_node.transform(*args)
+    async def evaluate(self, *args) -> Any:
+        return await self.naked_node.evaluate(*args)
 
 
 class AsyncFunctionDAG(BaseModel, frozen=True):
@@ -62,7 +62,7 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
                 )
 
             # We have a special case for the root node, enabling a standard
-            # fetching of inputs in the transform.
+            # fetching of inputs in the evaluate method.
             input_nodes = tuple(prevalidated_node.input_nodes) or ("__INPUT__",)
             annotated_node = AsyncDAGNode(
                 naked_node=node,
@@ -154,7 +154,7 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
     # The current policy of batching nodes into a single task is not
     # optimal, but is provably correct and serves as a baseline.
     # This would likely include changing `from_prevalidated_dag` as well.
-    async def transform(self, value: Any) -> Any:
+    async def evaluate(self, value: Any) -> Any:
         context = {"__INPUT__": value}
         # The nodes are topologically sorted. As it turns out, this is also
         # a valid order of evaluation - by the time a node is reached, all
@@ -165,7 +165,7 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
             nodes_with_args = [
                 (n, tuple(context[v] for v in n.input_nodes)) for n in batch
             ]
-            tasks = [n.transform(*vs) for (n, vs) in nodes_with_args]
+            tasks = [n.evaluate(*vs) for (n, vs) in nodes_with_args]
             output_values = await asyncio.gather(*tasks)
             zipped_nodes = zip(nodes_with_args, output_values)
             for (node, input_vs), output_v in zipped_nodes:
