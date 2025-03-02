@@ -2,13 +2,13 @@
 authors = [
     {name = "Daniel Soutar", email = "danielsoutar144@gmail.com"},
 ]
-requires-python = "<4.0,>=3.13"
+requires-python = "<4.0,>=3.10"
 dependencies = [
     "pydantic<3.0.0,>=2.10.2",
     "colorlog<7.0.0,>=6.9.0",
 ]
 name = "daggery"
-version = "0.2.2"
+version = "0.2.3"
 description = ""
 readme = "README.md"
 
