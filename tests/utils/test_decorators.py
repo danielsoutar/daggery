@@ -5,7 +5,13 @@ from pydantic import BaseModel
 
 from daggery.dag import FunctionDAG
 from daggery.node import Node
-from daggery.utils.decorators import bypass, cached, http_client, logged, timed
+from daggery.utils.decorators import (
+    bypass,
+    cached,
+    http_client,
+    logged,
+    timed,
+)
 from daggery.utils.logging import logger_factory
 
 
@@ -52,16 +58,15 @@ def test_logged():
 
 
 def test_timed():
-    with (
-        patch("daggery.utils.logging.logger_factory") as mock_logger_factory,
-        patch("time.time", side_effect=[1.0, 2.0]),
-    ):
+    with patch("daggery.utils.logging.logger_factory") as mock_logger_factory:
         mock_logger = mock_logger_factory.return_value
         mock_info = MagicMock()
         mock_logger.info = mock_info
+        mock_timer = MagicMock()
+        mock_timer.side_effect = [1.0, 2.0]
 
         class TimedNode(Node, frozen=True):
-            @timed(mock_logger)
+            @timed(mock_logger, mock_timer)
             def evaluate(self, value: int) -> int:
                 return value + 3
 

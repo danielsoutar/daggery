@@ -27,7 +27,7 @@ def logged(logger):
     return decorator
 
 
-def timed(logger):
+def timed(logger, timer=time.time):
     """
     This is a simple example of a timing decorator for a Node.
     It `wraps` the enclosing method for niceties like debugging
@@ -37,9 +37,9 @@ def timed(logger):
     def decorator(method):
         @wraps(method)
         def wrapper(self, *args, **kwargs):
-            start = time.time()
+            start = timer()
             result = method(self, *args, **kwargs)
-            raw_duration = time.time() - start
+            raw_duration = timer() - start
             duration = round(raw_duration, ndigits=5)
             logger.info(f"{self.name} duration: {duration}s")
             return result
