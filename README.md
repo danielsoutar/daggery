@@ -147,6 +147,7 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
     - [X] `FunctionDAG -> OperationDAG`? `FunctionDAG -> DAG`?
     - [X] Tidy up graph.py with naming and data structures as well as better validation.
     - [X] Get the example with a FastAPI service working.
+- [ ] Add docstrings to public types, functions, and methods.
 - [ ] Showcase to others.
 - [ ] ???
 - [ ] Profit!

@@ -131,3 +131,25 @@ def test_whitespace_only_string():
 def test_cannot_create_abstract_async_node():
     with pytest.raises(TypeError, match="Can't instantiate abstract class AsyncNode"):
         AsyncNode()  # type: ignore
+
+
+def test_cannot_create_async_node_without_implementing_abstract_method():
+    class MyNode(AsyncNode, frozen=True):
+        def some_method(self) -> None:
+            return None
+
+    with pytest.raises(TypeError, match="Can't instantiate abstract class MyNode with abstract method evaluate"):
+        MyNode(name="some name", children=())  # type: ignore
+
+
+def test_cannot_create_async_dag_using_async_node_without_implementing_abstract_async_method():
+    class MyNode(AsyncNode, frozen=True):
+        # Missing async keyword.
+        def evaluate(self) -> None:
+            return None
+
+    node = MyNode(name="some-name0", children=())
+
+    invalid_dag = AsyncFunctionDAG.from_string("some-name", custom_op_node_map={"some-name": MyNode})
+    assert isinstance(invalid_dag, InvalidDAG)
+    assert invalid_dag.message == f"Node {node} evaluate method is not a coroutine function."

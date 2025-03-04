@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 from typing import Any, Optional, Tuple, Union
 
 from pydantic import BaseModel
@@ -59,6 +60,10 @@ class AsyncFunctionDAG(BaseModel, frozen=True):
             if not node.model_config.get("frozen", False):
                 return InvalidDAG(
                     message=f"Mutable node found in DAG ({node}). This is not supported."
+                )
+            if not inspect.iscoroutinefunction(node.evaluate):
+                return InvalidDAG(
+                    message=f"Node {node} evaluate method is not a coroutine function."
                 )
 
             # We have a special case for the root node, enabling a standard
