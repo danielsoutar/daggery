@@ -24,3 +24,6 @@ site/
 
 # windsurf rules
 .windsurfrules
+
+# Random text files
+.txt

@@ -4,11 +4,9 @@ This mini-library exposes a set of types designed for executing directed, acycli
 
 ## Getting Started (Installation)
 
-1. Ensure you have `uv` [installed in your system](https://docs.astral.sh/uv/getting-started/installation/).
-2. `uv sync`
-3. That's it.
+[Daggery is available on PyPi](https://pypi.org/project/daggery). Install with your tool of choice (pip, poetry, uv, etc). Commands below assume `uv`.
 
-For checking out the docs:
+For checking out the docs locally:
 
 ```
 $ uv run mkdocs serve
@@ -139,15 +137,8 @@ Simple code is unlikely to go wrong. Composable abstractions are scalable.
 - [X] Add `nullable_[async_]dag` and `throwable_[async_]dag` wrappers.
 - [X] Migrate to `uv`.
 - [X] Add docstrings/doc pages
-- [ ] Tidy up/standardise terminology.
-    - [ ] `Node` vs `evaluate` vs `Operation`.
-    - [X] Different types of `Node`s.
-    - [X] `OperationSequence -> OperationSequence`?
-    - [X] `ArgumentMapping -> ArgumentMappingSequence`?
-    - [X] `FunctionDAG -> OperationDAG`? `FunctionDAG -> DAG`?
-    - [X] Tidy up graph.py with naming and data structures as well as better validation.
-    - [X] Get the example with a FastAPI service working.
+- [X] Tidy up/standardise terminology.
+- [X] Showcase to others.
 - [ ] Add docstrings to public types, functions, and methods.
-- [ ] Showcase to others.
 - [ ] ???
 - [ ] Profit!
